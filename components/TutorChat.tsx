@@ -1,0 +1,155 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { ChatMessage } from '../types';
+import { GeminiService } from '../services/geminiService';
+import { Send, Bot, User as UserIcon, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { Chat, GenerateContentResponse } from "@google/genai";
+
+const TutorChat: React.FC = () => {
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: 'model',
+      text: "Hi there! I'm your AI Tutor. I can help you understand complex topics, solve problems, or just clarify your doubts. What are we studying today?",
+      timestamp: Date.now()
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatSessionRef = useRef<Chat | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!chatSessionRef.current) {
+      chatSessionRef.current = GeminiService.createTutorChat();
+    }
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || !chatSessionRef.current) return;
+
+    const userMsg: ChatMessage = {
+      role: 'user',
+      text: input,
+      timestamp: Date.now()
+    };
+
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setIsTyping(true);
+
+    try {
+      const resultStream = await chatSessionRef.current.sendMessageStream({ message: userMsg.text });
+      
+      let fullResponseText = '';
+      // Add a placeholder for the model response that we will update
+      setMessages(prev => [...prev, { role: 'model', text: '', timestamp: Date.now() }]);
+
+      for await (const chunk of resultStream) {
+        const responseChunk = chunk as GenerateContentResponse;
+        const text = responseChunk.text;
+        if (text) {
+          fullResponseText += text;
+          setMessages(prev => {
+             const newArr = [...prev];
+             newArr[newArr.length - 1].text = fullResponseText;
+             return newArr;
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages(prev => [...prev, { role: 'model', text: "I'm sorry, I encountered an error. Please try asking again.", timestamp: Date.now() }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            {msg.role === 'model' && (
+              <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-5 h-5 text-primary-600" />
+              </div>
+            )}
+            
+            <div
+              className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                msg.role === 'user'
+                  ? 'bg-primary-600 text-white rounded-br-none'
+                  : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none'
+              }`}
+            >
+              {msg.role === 'model' ? (
+                <div className="markdown-body text-sm">
+                   <ReactMarkdown>{msg.text}</ReactMarkdown>
+                </div>
+              ) : (
+                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+              )}
+            </div>
+
+            {msg.role === 'user' && (
+              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
+                <UserIcon className="w-5 h-5 text-slate-500" />
+              </div>
+            )}
+          </div>
+        ))}
+        {isTyping && messages[messages.length - 1].role === 'user' && (
+           <div className="flex gap-3 justify-start">
+               <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-5 h-5 text-primary-600" />
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl rounded-bl-none px-4 py-3 flex items-center">
+                <Loader2 className="w-4 h-4 text-primary-400 animate-spin" />
+              </div>
+           </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="p-4 bg-white border-t border-slate-100">
+        <div className="relative flex items-center gap-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask your AI Tutor anything..."
+            className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none text-sm max-h-32 text-slate-900"
+            rows={1}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isTyping}
+            className="absolute right-2 p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="text-center mt-2">
+           <span className="text-[10px] text-slate-400">AI responses can be inaccurate. Always verify important information.</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TutorChat;
