@@ -53,6 +53,7 @@ export interface UserProfile {
   photoURL?: string;
   learningGoal?: string;
   learningStyle?: 'Visual' | 'Auditory' | 'Reading/Writing' | 'Kinesthetic';
+  credits: number;
 }
 
 export const INITIAL_FORM_DATA: StudyRequestData = {
@@ -63,5 +64,5 @@ export const INITIAL_FORM_DATA: StudyRequestData = {
   chapterName: '',
   author: '',
   questionCount: 5,
-  difficulty: 'Medium'
+  difficulty: 'Medium',
 };

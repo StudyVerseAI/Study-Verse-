@@ -21,6 +21,18 @@ const Auth: React.FC<AuthProps> = ({ onSignUpSuccess, onClose }) => {
     setLoading(true);
     setError(null);
 
+    // Domain Validation for Sign Up
+    if (!isLogin) {
+      const allowedDomains = ['@gmail.com', '@outlook.com', '@microsoft.com'];
+      const isValidDomain = allowedDomains.some(domain => email.toLowerCase().endsWith(domain));
+      
+      if (!isValidDomain) {
+        setError("Sign up is restricted to @gmail.com, @outlook.com, or @microsoft.com emails.");
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
@@ -87,7 +99,7 @@ const Auth: React.FC<AuthProps> = ({ onSignUpSuccess, onClose }) => {
             {isLogin ? 'Welcome Back' : 'Join StudyVerse'}
           </h2>
           <p className="text-slate-500 mt-2 text-sm">
-            {isLogin ? 'Sign in to access your saved history and profile.' : 'Create an account to save your progress.'}
+            {isLogin ? 'Sign in to access your saved history and profile.' : 'Create an account to get 100 free generations.'}
           </p>
         </div>
 

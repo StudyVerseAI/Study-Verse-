@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserProfile } from '../types';
-import { User, Phone, School, FileText, Camera, Save, X, Edit2, ArrowRight, Mail, BookOpen, Layers, Briefcase } from 'lucide-react';
+import { User, Phone, School, FileText, Camera, Save, X, Edit2, ArrowRight, Mail, BookOpen, Layers, Briefcase, Zap } from 'lucide-react';
 
 interface ProfileViewProps {
   profile: UserProfile;
@@ -19,7 +19,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, email, onSave, isOnb
     if (isOnboarding) {
       setIsEditing(true);
     }
-  }, [isOnboarding]);
+    // Update local form state if prop changes
+    setFormData(profile);
+  }, [isOnboarding, profile]);
 
   const handleInputChange = (field: keyof UserProfile, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -98,9 +100,16 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, email, onSave, isOnb
                  <span className="text-slate-500">Status</span>
                  <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs">Active</span>
                </div>
-               <div className="flex justify-between text-sm">
+               <div className="flex justify-between text-sm mb-2">
                  <span className="text-slate-500">Plan</span>
                  <span className="font-semibold text-primary-600 bg-primary-50 px-2 py-0.5 rounded text-xs">Premium</span>
+               </div>
+               <div className="flex justify-between text-sm items-center">
+                 <span className="text-slate-500">Credits</span>
+                 <div className="flex items-center gap-1 font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-xs">
+                    <Zap className="w-3 h-3 fill-amber-400 text-amber-500" />
+                    {formData.credits} / 100
+                 </div>
                </div>
             </div>
 

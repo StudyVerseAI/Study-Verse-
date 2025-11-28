@@ -7,6 +7,8 @@ import QuizView from './components/QuizView';
 import TutorChat from './components/TutorChat';
 import ProfileView from './components/ProfileView';
 import Auth from './components/Auth';
+import PremiumModal from './components/PremiumModal';
+import LoadingState from './components/LoadingState'; // Import new Loading Component
 import { GeminiService } from './services/geminiService';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
@@ -31,7 +33,9 @@ import {
   Loader2,
   UserCircle,
   PlayCircle,
-  LogIn
+  LogIn,
+  Zap,
+  Crown
 } from 'lucide-react';
 import { GenerateContentResponse } from '@google/genai';
 
@@ -41,6 +45,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // App State
   const [mode, setMode] = useState<AppMode>(AppMode.DASHBOARD);
@@ -55,7 +60,8 @@ const App: React.FC = () => {
     bio: '',
     photoURL: '',
     learningGoal: '',
-    learningStyle: 'Visual'
+    learningStyle: 'Visual',
+    credits: 100 // Default free plan credits
   };
   const [userProfile, setUserProfile] = useState<UserProfile>(initialProfileState);
 
@@ -82,32 +88,39 @@ const App: React.FC = () => {
       
       if (!currentUser) {
         setIsNewUser(false);
-        // Optional: clear profile state on logout
         setUserProfile(initialProfileState);
       }
     });
     return () => unsubscribe();
   }, []);
 
-  // Profile Persistence Listener - Fixed Logic
+  // Profile Persistence Listener
   useEffect(() => {
     if (user) {
       const savedProfile = localStorage.getItem(`profile_${user.uid}`);
       if (savedProfile) {
         try {
           const parsed = JSON.parse(savedProfile);
-          // Merge with initial state to ensure new fields (like learningGoal) exist
-          setUserProfile({ ...initialProfileState, ...parsed });
+          // Merge with initial state to ensure new fields (like credits) exist
+          // IMPORTANT: If credits exist in parsed, use them. If not (old user), use default.
+          setUserProfile(prev => ({ 
+            ...initialProfileState, 
+            ...parsed,
+            // Ensure displayName/photoURL are synced if missing in storage but present in Auth
+            displayName: parsed.displayName || user.displayName || '',
+            photoURL: parsed.photoURL || user.photoURL || '' 
+          }));
         } catch (e) {
           console.error("Failed to parse profile", e);
         }
       } else {
-        // Initialize defaults for new profile
-        setUserProfile(prev => ({
-           ...prev,
+        // Initialize defaults for new profile with 100 credits
+        setUserProfile({
+           ...initialProfileState,
            displayName: user.displayName || '',
-           photoURL: user.photoURL || ''
-        }));
+           photoURL: user.photoURL || '',
+           credits: 100
+        });
       }
     }
   }, [user]);
@@ -148,6 +161,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Update Profile and Save to LocalStorage
   const handleProfileSave = (newProfile: UserProfile) => {
     setUserProfile(newProfile);
     if (user) {
@@ -164,9 +178,8 @@ const App: React.FC = () => {
   const handleSignUpSuccess = () => {
     // This is called from the Auth component (modal)
     setIsNewUser(true);
-    // We keep the modal open? No, typically we want to show the Onboarding view.
-    // However, since Auth is now a modal, we should close the Auth modal and let the Main render handle the view.
-    // The state `isNewUser` will force the render to show Profile onboarding.
+    // Initialize profile for new user with 100 credits
+    setUserProfile(initialProfileState);
     setShowAuthModal(false);
   };
 
@@ -184,7 +197,6 @@ const App: React.FC = () => {
   };
 
   const addToHistory = (type: AppMode, content: any) => {
-    // Only add to history if logged in, but we handle that check before generating
     const newId = Date.now().toString();
     const newItem: HistoryItem = {
       id: newId,
@@ -207,10 +219,25 @@ const App: React.FC = () => {
     }
   };
 
+  const deductCredit = () => {
+    if (userProfile.credits > 0) {
+      const updatedProfile = { ...userProfile, credits: userProfile.credits - 1 };
+      handleProfileSave(updatedProfile);
+      return true;
+    }
+    return false;
+  };
+
   const handleGenerate = async () => {
     // Check Auth First
     if (!user) {
       setShowAuthModal(true);
+      return;
+    }
+
+    // Check Credits
+    if (userProfile.credits <= 0) {
+      setError("You have used all your free generations (100/100). Upgrade to Premium for more.");
       return;
     }
 
@@ -235,6 +262,7 @@ const App: React.FC = () => {
             }
         }
         addToHistory(AppMode.SUMMARY, text);
+        deductCredit();
 
       } else if (mode === AppMode.ESSAY) {
         setEssayContent('');
@@ -249,12 +277,14 @@ const App: React.FC = () => {
             }
         }
         addToHistory(AppMode.ESSAY, text);
+        deductCredit();
 
       } else if (mode === AppMode.QUIZ) {
         setQuizData(null);
         const questions = await GeminiService.generateQuiz(formData);
         setQuizData(questions);
         addToHistory(AppMode.QUIZ, questions);
+        deductCredit();
       }
     } catch (err) {
       console.error(err);
@@ -268,6 +298,12 @@ const App: React.FC = () => {
     // Check Auth First
     if (!user) {
       setShowAuthModal(true);
+      return;
+    }
+
+    // Check Credits
+    if (userProfile.credits <= 0) {
+      setError("You have used all your free generations (100/100). Upgrade to Premium for more.");
       return;
     }
 
@@ -343,6 +379,7 @@ const App: React.FC = () => {
           };
           setHistory(prev => [newItem, ...prev]);
           setCurrentHistoryId(newId);
+          deductCredit();
 
       } else if (mode === AppMode.ESSAY) {
         setEssayContent('');
@@ -367,6 +404,7 @@ const App: React.FC = () => {
         };
         setHistory(prev => [newItem, ...prev]);
         setCurrentHistoryId(newId);
+        deductCredit();
 
       } else if (mode === AppMode.QUIZ) {
         setQuizData(null);
@@ -384,6 +422,7 @@ const App: React.FC = () => {
         };
         setHistory(prev => [newItem, ...prev]);
         setCurrentHistoryId(newId);
+        deductCredit();
       }
     } catch (err) {
       console.error(err);
@@ -436,15 +475,15 @@ const App: React.FC = () => {
     };
 
     const dashboardCards = [
-      { id: AppMode.SUMMARY, label: 'Summaries Created', count: stats.summaries, icon: FileText, color: 'text-primary-700', bg: 'bg-primary-50' },
-      { id: AppMode.QUIZ, label: 'Quizzes Created', count: stats.quizzes, icon: BrainCircuit, color: 'text-primary-600', bg: 'bg-primary-50' },
-      { id: AppMode.ESSAY, label: 'Essays Created', count: stats.essays, icon: BookOpen, color: 'text-amber-600', bg: 'bg-primary-50' },
-      { id: AppMode.TUTOR, label: 'AI Tutor Chats', count: stats.chats, icon: MessageCircle, color: 'text-primary-800', bg: 'bg-primary-50' },
+      { id: AppMode.SUMMARY, label: 'Summaries Created', count: stats.summaries, icon: FileText, color: 'text-amber-800', bg: 'bg-[#FDF5E6]' },
+      { id: AppMode.QUIZ, label: 'Quizzes Created', count: stats.quizzes, icon: BrainCircuit, color: 'text-amber-700', bg: 'bg-[#FDF5E6]' },
+      { id: AppMode.ESSAY, label: 'Essays Created', count: stats.essays, icon: BookOpen, color: 'text-amber-600', bg: 'bg-[#FDF5E6]' },
+      { id: AppMode.TUTOR, label: 'AI Tutor Chats', count: stats.chats, icon: MessageCircle, color: 'text-amber-900', bg: 'bg-[#FDF5E6]' },
     ];
 
     if (dashboardView !== 'OVERVIEW') {
       const filteredHistory = history.filter(h => h.type === dashboardView);
-      const categoryLabel = dashboardCards.find(c => c.id === dashboardView)?.label.replace(' Created', '') || 'History';
+      const categoryLabel = dashboardCards.find(c => c.id === dashboardView)?.label.replace(' Created', '').replace(' Chats', '') || 'History';
 
       return (
         <div className="relative z-10 animate-in fade-in slide-in-from-right-8 duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
@@ -534,6 +573,12 @@ const App: React.FC = () => {
                     <p className="text-slate-500 text-lg max-w-xl leading-relaxed">
                       {user ? "Your AI learning engine is idling. Ready to accelerate your studies?" : "Sign in to save your summaries, quizzes, and essays."}
                     </p>
+                    {user && (
+                       <div className="mt-4 flex items-center gap-2 text-primary-700 bg-primary-50/80 backdrop-blur-sm px-3 py-1.5 rounded-lg w-fit border border-primary-100">
+                          <Zap className="w-4 h-4 fill-primary-500 text-primary-500" />
+                          <span className="font-semibold text-sm">{userProfile.credits} generations remaining</span>
+                       </div>
+                    )}
                   </div>
                   <div className="hidden md:block animate-pulse">
                      <Sparkles className="w-8 h-8 text-primary-400" />
@@ -566,8 +611,8 @@ const App: React.FC = () => {
               </div>
           </div>
 
-          {/* Stats Grid - Show even for guests, but will be empty */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Stats List (Vertical) */}
+          <div className="flex flex-col gap-4">
             {dashboardCards.map((stat, idx) => (
               <button 
                 key={idx} 
@@ -575,32 +620,30 @@ const App: React.FC = () => {
                     if (!user) setShowAuthModal(true);
                     else setDashboardView(stat.id as AppMode);
                 }}
-                className={`group relative p-6 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:-translate-y-2 text-left w-full overflow-hidden`}
+                className={`group relative p-6 rounded-2xl bg-[#FFFAF0] border border-stone-100/60 shadow-sm hover:shadow-md transition-all duration-300 text-left w-full overflow-hidden flex items-center justify-between`}
                 style={{ animationDelay: `${(idx + 1) * 150}ms` }}
               >
-                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-transparent to-primary-50/50`}></div>
-                 
-                 <div className="flex items-center gap-6 relative z-10">
-                    <div className={`w-18 h-18 p-4 rounded-2xl ${stat.bg} ${stat.color} transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner ring-1 ring-primary-100/50`}>
-                      <stat.icon className="w-8 h-8" />
+                 <div className="flex items-center gap-6">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} shadow-sm border border-stone-100`}>
+                      <stat.icon className={`w-7 h-7 ${stat.color}`} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1 group-hover:text-primary-600 transition-colors">{stat.label}</p>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-slate-800 tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-primary-700 group-hover:to-primary-500 transition-all">
-                          {stat.count}
-                        </span>
-                        {user && (
-                            <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                            View History
-                            </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transform -translate-x-4 group-hover:translate-x-0 transition-all duration-500">
-                       <ChevronRight className="w-6 h-6 text-primary-300" />
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{stat.label}</p>
+                      <span className="text-3xl font-bold text-slate-800 tracking-tight">
+                        {stat.count}
+                      </span>
                     </div>
                  </div>
+                 
+                 {user && stat.id === AppMode.TUTOR && (
+                    <div className="flex items-center gap-1 px-3 py-1 bg-primary-100/50 rounded-full text-xs font-semibold text-primary-700">
+                        <span>View History</span>
+                        <ChevronRight className="w-3 h-3" />
+                    </div>
+                 )}
+                 {user && stat.id !== AppMode.TUTOR && (
+                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-primary-400 transition-colors" />
+                 )}
               </button>
             ))}
           </div>
@@ -645,6 +688,11 @@ const App: React.FC = () => {
             )
         }
       return <TutorChat />;
+    }
+
+    // Loading View
+    if (loading) {
+      return <LoadingState mode={mode} />;
     }
 
     const showEmptyState = !loading && 
@@ -818,6 +866,11 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* Premium Modal Overlay */}
+      {showPremiumModal && (
+        <PremiumModal onClose={() => setShowPremiumModal(false)} />
+      )}
+
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-lg border-b border-slate-100 sticky top-0 z-30 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -850,10 +903,19 @@ const App: React.FC = () => {
                     Sign In
                  </button>
              )}
-             <div className="flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
+             {user && (
+               <div className="flex items-center gap-2 text-sm font-medium text-primary-700 bg-primary-50 px-3 py-1 rounded-full border border-primary-100">
+                  <Zap className="w-3 h-3 fill-primary-500 text-primary-500" />
+                  {userProfile.credits}
+               </div>
+             )}
+             <button 
+               onClick={() => setShowPremiumModal(true)}
+               className="flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-50 hover:bg-primary-50 hover:text-primary-600 px-4 py-1.5 rounded-full border border-slate-100 transition-colors"
+             >
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
               v2.1 Premium
-            </div>
+            </button>
           </div>
         </div>
       </header>
@@ -929,6 +991,21 @@ const App: React.FC = () => {
                   </button>
                 );
               })}
+              
+              <div className="pt-4 mt-2 border-t border-slate-50">
+                 <button
+                    onClick={() => {
+                      setIsSidebarOpen(false);
+                      setShowPremiumModal(true);
+                    }}
+                    className="w-full group flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200 text-slate-600 hover:bg-amber-50 hover:text-amber-800"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <Crown className="w-5 h-5 text-amber-500" />
+                      <span className="font-medium text-[15px]">Premium Plans</span>
+                    </div>
+                  </button>
+              </div>
           </nav>
 
           <div 

@@ -11,108 +11,43 @@ interface InputFormProps {
 }
 
 const InputForm: React.FC<InputFormProps> = ({ data, mode, onChange, disabled }) => {
+
+  const renderInput = (
+    label: string, 
+    field: keyof StudyRequestData, 
+    Icon: React.ElementType, 
+    placeholder: string
+  ) => (
+    <div className="space-y-1">
+      <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">{label}</label>
+      <div className="relative group">
+        <Icon className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+        <input
+          type="text"
+          value={data[field] as string}
+          onChange={(e) => onChange(field, e.target.value)}
+          disabled={disabled}
+          placeholder={placeholder}
+          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all disabled:opacity-60 text-slate-900"
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
       <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
         <BookOpen className="w-5 h-5 text-primary-600" />
         Study Details
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Subject */}
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Subject</label>
-          <div className="relative">
-            <BookType className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={data.subject}
-              onChange={(e) => onChange('subject', e.target.value)}
-              disabled={disabled}
-              placeholder="e.g. History"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all disabled:opacity-60 text-slate-900"
-            />
-          </div>
-        </div>
-
-        {/* Class */}
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Class / Grade</label>
-          <div className="relative">
-            <GraduationCap className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={data.gradeClass}
-              onChange={(e) => onChange('gradeClass', e.target.value)}
-              disabled={disabled}
-              placeholder="e.g. 10th Grade"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all disabled:opacity-60 text-slate-900"
-            />
-          </div>
-        </div>
-
-        {/* Board */}
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Board</label>
-          <div className="relative">
-            <School className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={data.board}
-              onChange={(e) => onChange('board', e.target.value)}
-              disabled={disabled}
-              placeholder="e.g. CBSE"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all disabled:opacity-60 text-slate-900"
-            />
-          </div>
-        </div>
-
-        {/* Language */}
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Language</label>
-          <div className="relative">
-            <Languages className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={data.language}
-              onChange={(e) => onChange('language', e.target.value)}
-              disabled={disabled}
-              placeholder="e.g. English"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all disabled:opacity-60 text-slate-900"
-            />
-          </div>
-        </div>
-
-        {/* Chapter Name */}
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Chapter Name</label>
-          <div className="relative">
-            <BookOpen className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={data.chapterName}
-              onChange={(e) => onChange('chapterName', e.target.value)}
-              disabled={disabled}
-              placeholder="e.g. The French Revolution"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all disabled:opacity-60 text-slate-900"
-            />
-          </div>
-        </div>
-
-        {/* Author (Optional) */}
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Author (Optional)</label>
-          <div className="relative">
-            <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={data.author}
-              onChange={(e) => onChange('author', e.target.value)}
-              disabled={disabled}
-              placeholder="e.g. NCERT"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all disabled:opacity-60 text-slate-900"
-            />
-          </div>
-        </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {renderInput("Subject", "subject", BookType, "e.g. History")}
+        {renderInput("Class / Grade", "gradeClass", GraduationCap, "e.g. 10th Grade")}
+        {renderInput("Board", "board", School, "e.g. CBSE")}
+        {renderInput("Language", "language", Languages, "e.g. English")}
+        {renderInput("Chapter Name", "chapterName", BookOpen, "e.g. The French Revolution")}
+        {renderInput("Author (Optional)", "author", User, "e.g. NCERT")}
 
         {/* Quiz Specific Options */}
         {mode === AppMode.QUIZ && (

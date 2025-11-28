@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from '../types';
 import { GeminiService } from '../services/geminiService';
-import { Send, Bot, User as UserIcon, Loader2 } from 'lucide-react';
+import { Send, Bot, User as UserIcon, Loader2, Mic, MicOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Chat, GenerateContentResponse } from "@google/genai";
 
@@ -16,6 +16,7 @@ const TutorChat: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const chatSessionRef = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +29,28 @@ const TutorChat: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const toggleVoiceInput = () => {
+    if (isListening) return; // Stop handled by browser usually, or we can force stop
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(prev => prev + (prev ? ' ' : '') + transcript);
+      };
+      recognition.onend = () => setIsListening(false);
+      recognition.start();
+    } else {
+      alert("Voice input is not supported in this browser.");
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || !chatSessionRef.current) return;
@@ -128,11 +151,18 @@ const TutorChat: React.FC = () => {
 
       <div className="p-4 bg-white border-t border-slate-100">
         <div className="relative flex items-center gap-2">
+           <button
+            onClick={toggleVoiceInput}
+            className={`p-3 rounded-xl transition-colors ${isListening ? 'bg-red-50 text-red-500 animate-pulse' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+            title="Voice Input"
+          >
+            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask your AI Tutor anything..."
+            placeholder={isListening ? "Listening..." : "Ask your AI Tutor anything..."}
             className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none text-sm max-h-32 text-slate-900"
             rows={1}
           />
