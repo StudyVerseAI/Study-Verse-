@@ -35,7 +35,8 @@ import {
   PlayCircle,
   LogIn,
   Zap,
-  Crown
+  Crown,
+  Plus
 } from 'lucide-react';
 import { GenerateContentResponse } from '@google/genai';
 
@@ -485,6 +486,16 @@ const App: React.FC = () => {
       const filteredHistory = history.filter(h => h.type === dashboardView);
       const categoryLabel = dashboardCards.find(c => c.id === dashboardView)?.label.replace(' Created', '').replace(' Chats', '') || 'History';
 
+      const getSingularName = (view: AppMode) => {
+        switch(view) {
+            case AppMode.SUMMARY: return 'Summary';
+            case AppMode.QUIZ: return 'Quiz';
+            case AppMode.ESSAY: return 'Essay';
+            case AppMode.TUTOR: return 'Chat';
+            default: return 'Item';
+        }
+      };
+
       return (
         <div className="relative z-10 animate-in fade-in slide-in-from-right-8 duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
           <button 
@@ -507,7 +518,24 @@ const App: React.FC = () => {
               <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
                  <Clock className="w-8 h-8 text-primary-300" />
               </div>
-              <p className="text-slate-500 font-medium">No history found for this category yet.</p>
+              <p className="text-slate-500 font-medium mb-6">No {categoryLabel.toLowerCase()} found yet.</p>
+
+              <button
+                onClick={() => {
+                  setSummaryContent('');
+                  setEssayContent('');
+                  setQuizData(null);
+                  setExistingQuizScore(undefined);
+                  setCurrentHistoryId(null);
+                  setError(null);
+                  setMode(dashboardView);
+                  setDashboardView('OVERVIEW');
+                }}
+                className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-colors shadow-lg shadow-primary-500/20"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Create New {getSingularName(dashboardView)}
+              </button>
             </div>
           ) : (
             <div className="grid gap-5">
@@ -969,6 +997,17 @@ const App: React.FC = () => {
                           timestamp: Date.now()
                         };
                         setHistory(prev => [newHistoryItem, ...prev]);
+                      }
+
+                      // RESET CONTENT STATES to ensure a fresh view for new generations
+                      if (item.id === AppMode.SUMMARY || item.id === AppMode.ESSAY || item.id === AppMode.QUIZ) {
+                          setSummaryContent('');
+                          setEssayContent('');
+                          setQuizData(null);
+                          setExistingQuizScore(undefined);
+                          setCurrentHistoryId(null);
+                          setError(null);
+                          // We intentionally do NOT reset formData so users retain context
                       }
                       
                       setMode(item.id);
