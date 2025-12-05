@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { StudyRequestData, QuizQuestion } from "../types";
+import { StudyRequestData, QuizQuestion, TimetableEntry } from "../types";
 
 // Initialize the client
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -109,9 +108,136 @@ export const GeminiService = {
     });
 
     if (response.text) {
-      return JSON.parse(response.text) as QuizQuestion[];
+      try {
+        return JSON.parse(response.text) as QuizQuestion[];
+      } catch (e) {
+        console.error("JSON Parse Error in Quiz:", e);
+        throw new Error("Failed to parse quiz data.");
+      }
     }
     throw new Error("Failed to generate quiz data");
+  },
+
+  /**
+   * Generates a study timetable.
+   */
+  generateStudyTimetable: async (examDate: string, subjects: string, hoursPerDay: number): Promise<TimetableEntry[]> => {
+    const today = new Date().toDateString();
+    const prompt = `
+      Current Date: ${today}.
+      Goal: Create a study timetable starting from tomorrow up to the exam date: ${examDate}.
+      Subjects to cover: ${subjects}.
+      Daily study limit: ${hoursPerDay} hours.
+      
+      Requirements:
+      1. Create a structured plan for each day.
+      2. If the exam is more than 2 weeks away, provide a detailed plan for the next 14 days only.
+      3. Balance subjects and include revision slots.
+      4. Output strict JSON.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              day: { type: Type.STRING, description: "Day of the week (e.g., Monday)" },
+              date: { type: Type.STRING, description: "Date string (YYYY-MM-DD)" },
+              slots: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    time: { type: Type.STRING, description: "Time range (e.g. 10:00 AM - 11:00 AM)" },
+                    activity: { type: Type.STRING, description: "Specific topic or activity" },
+                    subject: { type: Type.STRING, description: "Subject category" }
+                  },
+                  required: ["time", "activity", "subject"]
+                }
+              }
+            },
+            required: ["day", "date", "slots"]
+          }
+        }
+      }
+    });
+
+    if (response.text) {
+      try {
+        return JSON.parse(response.text) as TimetableEntry[];
+      } catch (e) {
+        console.error("JSON Parse Error in Timetable:", e);
+        throw new Error("Failed to parse timetable data. Please try again.");
+      }
+    }
+    throw new Error("Failed to generate timetable");
+  },
+
+  /**
+   * Updates an existing study timetable based on user instructions.
+   */
+  updateStudyTimetable: async (currentTimetable: TimetableEntry[], instruction: string): Promise<TimetableEntry[]> => {
+    const prompt = `
+      You are an intelligent study planner.
+      
+      Current Timetable (JSON):
+      ${JSON.stringify(currentTimetable)}
+      
+      User's Request to Edit:
+      "${instruction}"
+      
+      Task:
+      1. Modify the timetable according to the user's request.
+      2. Keep the same structure (Day, Date, Slots).
+      3. Ensure the schedule remains logical (no overlapping times, reasonable breaks if implied).
+      4. Output strict JSON only.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              day: { type: Type.STRING },
+              date: { type: Type.STRING },
+              slots: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    time: { type: Type.STRING },
+                    activity: { type: Type.STRING },
+                    subject: { type: Type.STRING }
+                  },
+                  required: ["time", "activity", "subject"]
+                }
+              }
+            },
+            required: ["day", "date", "slots"]
+          }
+        }
+      }
+    });
+
+    if (response.text) {
+      try {
+        return JSON.parse(response.text) as TimetableEntry[];
+      } catch (e) {
+        console.error("JSON Parse Error in Timetable Update:", e);
+        throw new Error("Failed to update timetable data.");
+      }
+    }
+    throw new Error("Failed to generate updated timetable");
   },
 
   /**
@@ -124,5 +250,60 @@ export const GeminiService = {
         systemInstruction: "You are a helpful, encouraging, and knowledgeable AI Tutor. Help the student with their questions using the Socratic method where appropriate.",
       }
     });
+  },
+
+  /**
+   * Analyzes a payment screenshot to verify the transaction.
+   */
+  validatePaymentScreenshot: async (imageBase64: string, planName: string, price: number) => {
+    const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+    
+    const prompt = `
+      Analyze this image. It is submitted as a payment proof for a subscription plan named "${planName}" with a value of ₹${price}.
+      
+      Please verify:
+      1. Is this a payment receipt or transaction screenshot?
+      2. Is the transaction successful?
+      3. Does the amount look related to ${price} (allow for small differences if fees applied, or if it matches exactly)?
+      
+      Return a JSON object with:
+      - isValid: boolean (true if it looks like a legitimate successful payment for this amount)
+      - reason: string (short explanation of your finding)
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: cleanBase64
+            }
+          },
+          { text: prompt }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            isValid: { type: Type.BOOLEAN },
+            reason: { type: Type.STRING }
+          },
+          required: ["isValid", "reason"]
+        }
+      }
+    });
+
+    if (response.text) {
+      try {
+        return JSON.parse(response.text);
+      } catch (e) {
+        return { isValid: false, reason: "Failed to parse AI response" };
+      }
+    }
+    throw new Error("Failed to analyze image");
   }
 };

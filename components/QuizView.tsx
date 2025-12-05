@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { QuizQuestion } from '../types';
-import { CheckCircle, XCircle, ArrowRight, RefreshCw, Award, Facebook, Instagram, Mail, Send, MessageCircle } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, RefreshCw, Award, Facebook, Instagram, Mail, Send, MessageCircle, Link, Copy } from 'lucide-react';
 
 interface QuizViewProps {
   questions: QuizQuestion[];
@@ -58,31 +58,37 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
   };
 
   const handleShare = (platform: string) => {
+    // Current URL (App Link) - Since it's a SPA, we share the main link or specific if configured
+    const appUrl = window.location.origin; 
     const text = `I scored ${score}/${questions.length} on my StudyVerse Quiz! 🎓`;
-    const url = window.location.href; 
+    const shareTextWithLink = `${text}\nCheck it out here: ${appUrl}`;
     
     let shareUrl = '';
     switch(platform) {
       case 'whatsapp':
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(shareTextWithLink)}`;
         break;
       case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(appUrl)}&quote=${encodeURIComponent(text)}`;
         break;
       case 'telegram':
-          shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+          shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(text)}`;
           break;
       case 'gmail':
-           shareUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("My StudyVerse Score")}&body=${encodeURIComponent(text)}`;
+           shareUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("My StudyVerse Score")}&body=${encodeURIComponent(shareTextWithLink)}`;
            break;
       case 'email':
-        shareUrl = `mailto:?subject=My StudyVerse Score&body=${encodeURIComponent(text)}`;
+        shareUrl = `mailto:?subject=My StudyVerse Score&body=${encodeURIComponent(shareTextWithLink)}`;
         break;
       case 'instagram':
-          navigator.clipboard.writeText(text);
-          alert("Score copied! Open Instagram to paste and share.");
+          navigator.clipboard.writeText(shareTextWithLink);
+          alert("Score and link copied! Open Instagram to paste and share.");
           shareUrl = 'https://instagram.com';
           break;
+      case 'copy':
+          navigator.clipboard.writeText(shareTextWithLink);
+          alert("Score and link copied to clipboard!");
+          return;
     }
     
     if (shareUrl) window.open(shareUrl, '_blank');
@@ -101,44 +107,47 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
             <Award className="w-10 h-10 text-primary-600" />
           </div>
           <h2 className="text-2xl font-bold text-slate-800 mb-2">
-            {existingScore !== undefined ? 'Past Result' : 'Quiz Completed!'}
+            Past Result
           </h2>
           <p className="text-slate-500 mb-8">{message}</p>
           
-          <div className="text-4xl font-bold text-slate-900 mb-2">{score} / {questions.length}</div>
+          <div className="text-5xl font-bold text-slate-900 mb-2 tracking-tight">{score} <span className="text-3xl text-slate-300 font-normal">/ {questions.length}</span></div>
           <p className="text-sm text-slate-400 uppercase tracking-wide font-medium mb-8">Score Achieved</p>
-
-          <div className="mb-8">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Share Score</p>
-            <div className="flex flex-wrap justify-center gap-3">
-                <button onClick={() => handleShare('whatsapp')} className="p-2.5 bg-[#25D366] text-white rounded-full hover:scale-110 transition-transform shadow-sm" title="WhatsApp">
-                    <MessageCircle className="w-5 h-5 fill-current" />
-                </button>
-                <button onClick={() => handleShare('facebook')} className="p-2.5 bg-[#1877F2] text-white rounded-full hover:scale-110 transition-transform shadow-sm" title="Facebook">
-                    <Facebook className="w-5 h-5 fill-current" />
-                </button>
-                <button onClick={() => handleShare('instagram')} className="p-2.5 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white rounded-full hover:scale-110 transition-transform shadow-sm" title="Instagram">
-                    <Instagram className="w-5 h-5" />
-                </button>
-                <button onClick={() => handleShare('telegram')} className="p-2.5 bg-[#0088cc] text-white rounded-full hover:scale-110 transition-transform shadow-sm" title="Telegram">
-                    <Send className="w-5 h-5 fill-current" />
-                </button>
-                  <button onClick={() => handleShare('gmail')} className="p-2.5 bg-[#EA4335] text-white rounded-full hover:scale-110 transition-transform shadow-sm" title="Gmail">
-                    <Mail className="w-5 h-5 fill-current" />
-                </button>
-                <button onClick={() => handleShare('email')} className="p-2.5 bg-slate-500 text-white rounded-full hover:scale-110 transition-transform shadow-sm" title="Email">
-                    <Mail className="w-5 h-5" />
-                </button>
-            </div>
-          </div>
 
           <button
             onClick={onReset}
-            className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+            className="mb-10 inline-flex items-center px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors shadow-lg shadow-primary-500/20"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             {existingScore !== undefined ? 'Retake Quiz' : 'Take Another Quiz'}
           </button>
+
+          <div className="border-t border-slate-100 pt-8">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Share Score</p>
+            <div className="flex flex-wrap justify-center gap-3">
+                <button onClick={() => handleShare('whatsapp')} className="p-3 bg-[#25D366] text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="WhatsApp">
+                    <MessageCircle className="w-5 h-5 fill-current" />
+                </button>
+                <button onClick={() => handleShare('facebook')} className="p-3 bg-[#1877F2] text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Facebook">
+                    <Facebook className="w-5 h-5 fill-current" />
+                </button>
+                <button onClick={() => handleShare('instagram')} className="p-3 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Instagram">
+                    <Instagram className="w-5 h-5" />
+                </button>
+                <button onClick={() => handleShare('telegram')} className="p-3 bg-[#0088cc] text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Telegram">
+                    <Send className="w-5 h-5 fill-current" />
+                </button>
+                <button onClick={() => handleShare('gmail')} className="p-3 bg-[#EA4335] text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Gmail">
+                    <Mail className="w-5 h-5 fill-current" />
+                </button>
+                <button onClick={() => handleShare('email')} className="p-3 bg-slate-500 text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Email">
+                    <Mail className="w-5 h-5" />
+                </button>
+                <button onClick={() => handleShare('copy')} className="p-3 bg-slate-800 text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Copy Link">
+                    <Link className="w-5 h-5" />
+                </button>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-4 duration-500 delay-150">

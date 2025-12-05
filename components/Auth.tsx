@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { auth } from '../firebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, AuthError } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { GraduationCap, ArrowRight, Loader2, Mail, Lock, X } from 'lucide-react';
 
 interface AuthProps {
@@ -45,7 +44,7 @@ const Auth: React.FC<AuthProps> = ({ onSignUpSuccess, onClose }) => {
         // Don't close immediately on signup so onboarding can happen (handled by parent)
       }
     } catch (err: any) {
-      const firebaseError = err as AuthError;
+      const firebaseError = err as { code: string; message: string };
       let errorMessage = "An error occurred. Please try again.";
       
       switch (firebaseError.code) {

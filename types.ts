@@ -1,11 +1,13 @@
 
+
 export enum AppMode {
   DASHBOARD = 'DASHBOARD',
   SUMMARY = 'SUMMARY',
   QUIZ = 'QUIZ',
   ESSAY = 'ESSAY',
   TUTOR = 'TUTOR',
-  PROFILE = 'PROFILE'
+  PROFILE = 'PROFILE',
+  NOTES = 'NOTES'
 }
 
 export type DifficultyLevel = 'Easy' | 'Medium' | 'Hard';
@@ -26,6 +28,7 @@ export interface QuizQuestion {
   options: string[];
   correctAnswerIndex: number;
   explanation: string;
+  answerKeyExplanation?: string; // Optional field if generated differently
 }
 
 export interface ChatMessage {
@@ -54,6 +57,28 @@ export interface UserProfile {
   learningGoal?: string;
   learningStyle?: 'Visual' | 'Auditory' | 'Reading/Writing' | 'Kinesthetic';
   credits: number;
+  planType?: 'Free' | 'Starter' | 'Scholar' | 'Achiever';
+}
+
+export interface NoteItem {
+  id: string;
+  title: string;
+  content: string;
+  date: number;
+  tags: string[];
+}
+
+export interface ReminderItem {
+  id: string;
+  task: string;
+  dueTime: string; // ISO string or simple time string
+  completed: boolean;
+}
+
+export interface TimetableEntry {
+  day: string;
+  date: string;
+  slots: { time: string; activity: string; subject: string }[];
 }
 
 export const INITIAL_FORM_DATA: StudyRequestData = {

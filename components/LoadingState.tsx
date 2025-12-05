@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AppMode } from '../types';
-import { Sparkles, BrainCircuit, FileText, BookOpen } from 'lucide-react';
+import { Sparkles, BrainCircuit, FileText, BookOpen, Calendar } from 'lucide-react';
 
 interface LoadingStateProps {
   mode: AppMode;
@@ -30,6 +30,12 @@ const LoadingState: React.FC<LoadingStateProps> = ({ mode }) => {
       "Drafting body paragraphs...",
       "Polishing conclusion..."
     ],
+    [AppMode.NOTES]: [
+      "Analyzing exam date...",
+      "Evaluating syllabus...",
+      "Allocating study slots...",
+      "Optimizing your schedule..."
+    ],
     [AppMode.TUTOR]: ["Connecting to AI Tutor..."],
     [AppMode.DASHBOARD]: ["Loading..."],
     [AppMode.PROFILE]: ["Saving..."]
@@ -57,6 +63,7 @@ const LoadingState: React.FC<LoadingStateProps> = ({ mode }) => {
         <div className="relative bg-white p-6 rounded-full shadow-lg border border-primary-50">
            {mode === AppMode.QUIZ ? <BrainCircuit className="w-10 h-10 text-primary-500 animate-pulse" /> :
             mode === AppMode.ESSAY ? <BookOpen className="w-10 h-10 text-primary-500 animate-pulse" /> :
+            mode === AppMode.NOTES ? <Calendar className="w-10 h-10 text-primary-500 animate-pulse" /> :
             <FileText className="w-10 h-10 text-primary-500 animate-pulse" />
            }
         </div>
@@ -68,7 +75,9 @@ const LoadingState: React.FC<LoadingStateProps> = ({ mode }) => {
       </div>
 
       <h3 className="text-xl font-bold text-slate-800 mb-2 animate-pulse">
-        Generating {mode === AppMode.SUMMARY ? 'Summary' : mode === AppMode.QUIZ ? 'Quiz' : 'Essay'}
+        {mode === AppMode.NOTES ? 'Generating Schedule' : 
+         `Generating ${mode === AppMode.SUMMARY ? 'Summary' : mode === AppMode.QUIZ ? 'Quiz' : 'Essay'}`
+        }
       </h3>
       
       <p className="text-slate-500 text-sm font-medium bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100 transition-all duration-300">

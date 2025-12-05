@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { User, Phone, School, FileText, Camera, Save, X, Edit2, ArrowRight, Mail, BookOpen, Layers, Briefcase, Zap } from 'lucide-react';
@@ -49,6 +50,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, email, onSave, isOnb
     setFormData(profile);
     setIsEditing(false);
   };
+
+  const isPremium = formData.planType && formData.planType !== 'Free';
 
   return (
     <div className={`space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${isOnboarding ? 'py-4' : ''}`}>
@@ -102,7 +105,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, email, onSave, isOnb
                </div>
                <div className="flex justify-between text-sm mb-2">
                  <span className="text-slate-500">Plan</span>
-                 <span className="font-semibold text-primary-600 bg-primary-50 px-2 py-0.5 rounded text-xs">Premium</span>
+                 <span className={`font-semibold px-2 py-0.5 rounded text-xs ${!isPremium ? 'text-slate-600 bg-slate-100' : 'text-primary-600 bg-primary-50'}`}>
+                    {formData.planType || 'Free'}
+                 </span>
                </div>
                <div className="flex justify-between text-sm items-center">
                  <span className="text-slate-500">Credits</span>
