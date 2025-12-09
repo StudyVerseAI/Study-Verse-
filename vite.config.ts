@@ -1,5 +1,3 @@
-
-
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -20,6 +18,33 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
+      // Increase the warning limit slightly (to 1000kb) to reduce noise
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          // Manually split vendor chunks to improve caching and reduce single bundle size
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('firebase')) {
+                return 'firebase';
+              }
+              if (id.includes('@google/genai')) {
+                return 'genai';
+              }
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'react-vendor';
+              }
+              if (id.includes('lucide-react')) {
+                return 'ui-icons';
+              }
+              if (id.includes('react-markdown')) {
+                return 'markdown';
+              }
+              return 'vendor';
+            }
+          }
+        }
+      }
     }
   };
 });
