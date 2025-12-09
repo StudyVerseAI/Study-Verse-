@@ -175,10 +175,15 @@ const App: React.FC = () => {
   };
 
   const handlePaymentSuccess = (creditsToAdd: number, planName: 'STARTER' | 'SCHOLAR' | 'ACHIEVER') => {
-    const updatedProfile = { 
+    const planTypeMap: Record<string, 'Starter' | 'Scholar' | 'Achiever'> = {
+      'STARTER': 'Starter',
+      'SCHOLAR': 'Scholar',
+      'ACHIEVER': 'Achiever'
+    };
+    const updatedProfile: UserProfile = { 
       ...userProfile, 
       credits: userProfile.credits + creditsToAdd,
-      planType: planName
+      planType: planTypeMap[planName]
     };
     handleProfileSave(updatedProfile);
   };
