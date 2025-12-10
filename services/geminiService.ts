@@ -261,17 +261,21 @@ export const GeminiService = {
   validatePaymentScreenshot: async (imageBase64: string, planName: string, price: number) => {
     const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
     
+    // Strict Verification Prompt
     const prompt = `
-      Analyze this image. It is submitted as a payment proof for a subscription plan named "${planName}" with a value of ₹${price}.
+      Analyze this image. It is submitted as proof of payment for a subscription plan "${planName}".
       
-      Please verify:
-      1. Is this a payment receipt or transaction screenshot?
-      2. Is the transaction successful?
-      3. Does the amount look related to ${price} (allow for small differences if fees applied, or if it matches exactly)?
+      Mandatory Verification Checks:
+      1. **Transaction Status**: Must be SUCCESSFUL or COMPLETED.
+      2. **Amount**: Must be exactly ₹${price}.
+      3. **Payee Name**: The payment MUST be made to "SHIVABASAVARAJ SADASHIVAPPA JYOTI" (or "Shivabasavaraj Jyoti"). 
+         The name MUST appear in the screenshot as the receiver.
+      
+      If ANY of these 3 checks fail, set isValid to false.
       
       Return a JSON object with:
-      - isValid: boolean (true if it looks like a legitimate successful payment for this amount)
-      - reason: string (short explanation of your finding)
+      - isValid: boolean (true ONLY if all 3 checks pass)
+      - reason: string (Specific explanation of what matched or failed. E.g. "Name mismatch: found X instead of SHIVABASAVARAJ...", "Amount mismatch: found 100 instead of ${price}")
     `;
 
     const response = await ai.models.generateContent({

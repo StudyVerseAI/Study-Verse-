@@ -50,7 +50,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onPaymentSuccess }
   const currentPlan = plans[selectedPlan];
   
   // UPI Payment URL
-  const upiUrl = `upi://pay?pa=shivabasavaraj@ybl&pn=Shivabasavaraj Jyoti&am=${currentPlan.price}&cu=INR`;
+  const upiUrl = `upi://pay?pa=shivabasavaraj@ybl&pn=SHIVABASAVARAJ%20SADASHIVAPPA%20JYOTI&am=${currentPlan.price}&cu=INR`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +86,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onPaymentSuccess }
         onClose();
         alert(`Payment Verified! ${currentPlan.generations} generations added to your account.`);
       } else {
-        setVerificationError(result.reason || "We couldn't verify the payment from this image. Please ensure the amount and status are visible.");
+        setVerificationError(result.reason || "We couldn't verify the payment from this image. Please ensure the payee is SHIVABASAVARAJ SADASHIVAPPA JYOTI and the amount is correct.");
       }
     } catch (error) {
       console.error(error);
@@ -217,7 +217,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onPaymentSuccess }
                 <div className="w-full space-y-4">
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-left">
                       <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Paying to</p>
-                      <p className="font-bold text-slate-800 text-sm">Shivabasavaraj Jyoti</p>
+                      <p className="font-bold text-slate-800 text-sm break-words">SHIVABASAVARAJ SADASHIVAPPA JYOTI</p>
                       <p className="font-mono text-xs text-slate-500 select-all">shivabasavaraj@ybl</p>
                   </div>
 
