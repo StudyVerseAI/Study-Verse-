@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NoteItem, ReminderItem, TimetableEntry } from '../types';
 import { Plus, Trash2, Calendar, Clock, CheckSquare, Save, X, Sparkles, StickyNote, Bell, Edit3, Loader2, Edit } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
+import { SJTUTOR_AVATAR } from '../App';
 
 interface NotesViewProps {
   userId: string | null; // Use for local storage keys
@@ -326,11 +327,11 @@ const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
             {timetable.length === 0 && !isGenerating ? (
               <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
                 <div className="text-center mb-8">
-                  <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary-600">
-                     <Sparkles className="w-7 h-7" />
+                  <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-lg overflow-hidden">
+                     <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-800">AI Study Planner</h2>
-                  <p className="text-slate-500">Generate a personalized timetable based on your exam portion.</p>
+                  <h2 className="text-2xl font-bold text-slate-800">SJTutor's Planner</h2>
+                  <p className="text-slate-500">I can generate a personalized timetable for your upcoming exams.</p>
                 </div>
 
                 <div className="space-y-4">
@@ -375,9 +376,11 @@ const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
               </div>
             ) : isGenerating ? (
                <div className="flex flex-col items-center justify-center py-20 text-slate-500 bg-white rounded-2xl border border-slate-200">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary-500 mb-4" />
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary-500 mb-4 animate-bounce">
+                     <img src={SJTUTOR_AVATAR} alt="Thinking..." className="w-full h-full object-cover" />
+                  </div>
                   <p className="font-medium">
-                    {showEditTimetable ? 'Optimizing your schedule...' : 'Analyzing your syllabus...'}
+                    {showEditTimetable ? 'SJTutor is Optimizing...' : 'SJTutor is Planning...'}
                   </p>
                   <p className="text-sm">Creating an optimized schedule for you.</p>
                </div>

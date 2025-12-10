@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { AppMode, StudyRequestData, INITIAL_FORM_DATA, QuizQuestion, HistoryItem, UserProfile } from './types';
 import InputForm from './components/InputForm';
@@ -21,9 +19,7 @@ import {
   MessageCircle, 
   Sparkles, 
   AlertCircle, 
-  GraduationCap, 
   Menu, 
-  X,
   ChevronRight,
   LayoutDashboard,
   ArrowLeft,
@@ -36,6 +32,9 @@ import {
   Clock
 } from 'lucide-react';
 import { GenerateContentResponse } from '@google/genai';
+
+// SJTutor Avatar Constant
+export const SJTUTOR_AVATAR = "https://res.cloudinary.com/dbliqm48v/image/upload/v1765344874/gemini-2.5-flash-image_remove_all_the_elemts_around_the_tutor-0_lvlyl0.jpg";
 
 const App: React.FC = () => {
   // Auth State
@@ -395,8 +394,8 @@ const App: React.FC = () => {
 
           {filteredHistory.length === 0 ? (
             <div className="text-center py-24 bg-white/60 backdrop-blur-md rounded-2xl border border-slate-200/60 border-dashed animate-in zoom-in duration-500">
-              <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                 <Clock className="w-8 h-8 text-primary-300" />
+              <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-100 p-1">
+                 <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full rounded-full object-cover" />
               </div>
               <p className="text-slate-500 font-medium mb-6">No {categoryLabel.toLowerCase()} found yet.</p>
 
@@ -468,59 +467,69 @@ const App: React.FC = () => {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-primary-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
 
         <div className="relative z-10 space-y-8">
-          {/* Welcome Card */}
+          {/* Welcome Card with Avatar */}
           <div className="animate-fade-in-up bg-white/70 backdrop-blur-xl border border-white/50 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500">
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-100/40 to-transparent rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
               
-              <div className="relative z-10">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">
-                      Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">{user ? (userProfile.displayName || 'Scholar') : 'Guest'}</span>!
-                    </h3>
-                    <p className="text-slate-500 text-lg max-w-xl leading-relaxed">
-                      {user ? "Your AI learning engine is idling. Ready to accelerate your studies?" : "Sign in to access advanced features like Notes, Scheduling, and Saving History."}
-                    </p>
-                    {user && (
-                       <div className="mt-4 flex items-center gap-2 text-primary-700 bg-primary-50/80 backdrop-blur-sm px-3 py-1.5 rounded-lg w-fit border border-primary-100">
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                <div className="flex-1">
+                  <h3 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">
+                    Hey, I'm <span className="text-primary-600">SJTutor</span>!
+                  </h3>
+                  <h4 className="text-xl font-medium text-slate-600 mb-4">
+                    Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">{user ? (userProfile.displayName || 'Scholar') : 'Guest'}</span>
+                  </h4>
+                  <p className="text-slate-500 text-lg leading-relaxed mb-6">
+                    {user ? "I'm ready to help you ace your studies. What are we working on today?" : "I'm your AI study companion. Sign in to unlock my full potential!"}
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-4">
+                    <button 
+                        onClick={() => {
+                        if (!user) setShowAuthModal(true);
+                        else setMode(AppMode.TUTOR);
+                        }}
+                        className="group relative px-6 py-3 bg-slate-900 text-white rounded-xl font-medium overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-900/20"
+                    >
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                        <span className="flex items-center gap-2 relative z-10">
+                        <MessageCircle className="w-5 h-5" />
+                        Chat with Me
+                        </span>
+                    </button>
+                    {!user && (
+                        <button 
+                            onClick={() => setShowAuthModal(true)}
+                            className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors shadow-sm"
+                        >
+                            Sign In / Sign Up
+                        </button>
+                    )}
+                  </div>
+
+                   {user && (
+                       <div className="mt-6 flex items-center gap-2 text-primary-700 bg-primary-50/80 backdrop-blur-sm px-3 py-1.5 rounded-lg w-fit border border-primary-100">
                           <Zap className="w-4 h-4 fill-primary-500 text-primary-500" />
                           <span className="font-semibold text-sm">{userProfile.credits} generations remaining</span>
                        </div>
                     )}
-                  </div>
-                  <div className="hidden md:block animate-pulse">
-                     <Sparkles className="w-8 h-8 text-primary-400" />
-                  </div>
                 </div>
-
-                <div className="mt-8 flex gap-4">
-                  <button 
-                    onClick={() => {
-                       if (!user) setShowAuthModal(true);
-                       else setMode(AppMode.TUTOR);
-                    }}
-                    className="group relative px-6 py-3 bg-slate-900 text-white rounded-xl font-medium overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-900/20"
-                  >
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                    <span className="flex items-center gap-2 relative z-10">
-                      <MessageCircle className="w-5 h-5" />
-                      Chat with AI Tutor
-                    </span>
-                  </button>
-                  {!user && (
-                    <button 
-                        onClick={() => setShowAuthModal(true)}
-                        className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors shadow-sm"
-                    >
-                        Sign In / Sign Up
-                    </button>
-                  )}
+                
+                {/* Avatar Display */}
+                <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 animate-blob">
+                     <div className="absolute inset-0 bg-primary-200 rounded-full blur-2xl opacity-50"></div>
+                     <img 
+                        src={SJTUTOR_AVATAR} 
+                        alt="SJTutor Mascot" 
+                        className="relative w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                     />
                 </div>
               </div>
           </div>
 
           {/* Stats List (Vertical) */}
           <div className="flex flex-col gap-4">
+            <h3 className="text-lg font-bold text-slate-700 ml-1">Quick Actions</h3>
             {dashboardCards.map((stat, idx) => (
               <button 
                 key={idx} 
@@ -622,12 +631,12 @@ const App: React.FC = () => {
 
         {showEmptyState && (
           <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
-             <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-primary-500" />
+             <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg overflow-hidden">
+                <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
              </div>
              <h3 className="text-lg font-semibold text-slate-800 mb-2">Ready to Start?</h3>
              <p className="text-slate-500 mb-8 max-w-md mx-auto">
-               Enter your study details above and let AI generate your personalized content.
+               Enter your study details above and I'll generate your personalized content immediately.
              </p>
              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                <button 
@@ -664,7 +673,12 @@ const App: React.FC = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#FFFAF0] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+        <div className="relative">
+             <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary-500 animate-bounce">
+                <img src={SJTUTOR_AVATAR} alt="Loading..." className="w-full h-full object-cover" />
+             </div>
+             <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-primary-500 rounded-full animate-ping"></div>
+        </div>
       </div>
     );
   }
@@ -684,12 +698,12 @@ const App: React.FC = () => {
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-slate-100">
              <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-600/20">
-                 <GraduationCap className="w-6 h-6 text-white" />
+               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-500 shadow-md flex-shrink-0">
+                 <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
                </div>
                <div>
-                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">Study Verse AI</h1>
-                 <p className="text-xs text-slate-500 font-medium">AI Study Companion</p>
+                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">SJTutor</h1>
+                 <p className="text-xs text-slate-500 font-medium">Your AI Study Buddy</p>
                </div>
              </div>
           </div>
@@ -797,7 +811,7 @@ const App: React.FC = () => {
              </button>
              <h2 className="text-lg font-bold text-slate-800">
                {/* Show Study Verse AI on Mobile or when Dashboard is active, otherwise show nav label */}
-               {mode === AppMode.DASHBOARD ? 'Study Verse AI' : 
+               {mode === AppMode.DASHBOARD ? 'SJTutor' : 
                 (navItems.find(n => n.id === mode)?.label || 'Study Verse AI')}
              </h2>
           </div>

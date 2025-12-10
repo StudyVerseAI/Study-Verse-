@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppMode } from '../types';
-import { Sparkles, BrainCircuit, FileText, BookOpen, Calendar } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+import { SJTUTOR_AVATAR } from '../App';
 
 interface LoadingStateProps {
   mode: AppMode;
@@ -60,23 +60,23 @@ const LoadingState: React.FC<LoadingStateProps> = ({ mode }) => {
         {/* Animated Background Blobs */}
         <div className="absolute inset-0 bg-primary-100 rounded-full blur-xl animate-pulse"></div>
         
-        <div className="relative bg-white p-6 rounded-full shadow-lg border border-primary-50">
-           {mode === AppMode.QUIZ ? <BrainCircuit className="w-10 h-10 text-primary-500 animate-pulse" /> :
-            mode === AppMode.ESSAY ? <BookOpen className="w-10 h-10 text-primary-500 animate-pulse" /> :
-            mode === AppMode.NOTES ? <Calendar className="w-10 h-10 text-primary-500 animate-pulse" /> :
-            <FileText className="w-10 h-10 text-primary-500 animate-pulse" />
-           }
+        <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl">
+           <img 
+            src={SJTUTOR_AVATAR} 
+            alt="Thinking..." 
+            className="w-full h-full object-cover animate-pulse" 
+           />
         </div>
         
         {/* Orbiting Sparkle */}
         <div className="absolute -top-2 -right-2 animate-spin duration-3000">
-           <Sparkles className="w-6 h-6 text-amber-400 fill-amber-400" />
+           <Sparkles className="w-8 h-8 text-amber-400 fill-amber-400" />
         </div>
       </div>
 
       <h3 className="text-xl font-bold text-slate-800 mb-2 animate-pulse">
-        {mode === AppMode.NOTES ? 'Generating Schedule' : 
-         `Generating ${mode === AppMode.SUMMARY ? 'Summary' : mode === AppMode.QUIZ ? 'Quiz' : 'Essay'}`
+        {mode === AppMode.NOTES ? 'SJTutor is Planning' : 
+         `SJTutor is Creating your ${mode === AppMode.SUMMARY ? 'Summary' : mode === AppMode.QUIZ ? 'Quiz' : 'Essay'}`
         }
       </h3>
       

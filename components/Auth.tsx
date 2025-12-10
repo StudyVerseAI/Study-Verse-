@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { auth } from '../firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { GraduationCap, ArrowRight, Loader2, Mail, Lock, X } from 'lucide-react';
+import { ArrowRight, Loader2, Mail, Lock, X } from 'lucide-react';
+import { SJTUTOR_AVATAR } from '../App';
 
 interface AuthProps {
   onSignUpSuccess?: () => void;
@@ -91,14 +92,14 @@ const Auth: React.FC<AuthProps> = ({ onSignUpSuccess, onClose }) => {
         </button>
 
         <div className="mb-6 text-center">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center shadow-xl shadow-primary-500/20 mx-auto mb-4">
-            <GraduationCap className="w-7 h-7 text-white" />
+          <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center shadow-xl shadow-primary-500/20 mx-auto mb-4 overflow-hidden border-4 border-white">
+            <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-800">
-            {isLogin ? 'Welcome Back' : 'Join StudyVerse'}
+            {isLogin ? 'Welcome Back!' : 'Join SJTutor'}
           </h2>
           <p className="text-slate-500 mt-2 text-sm">
-            {isLogin ? 'Sign in to access your saved history and profile.' : 'Create an account to get 100 free generations.'}
+            {isLogin ? 'Sign in to sync your progress.' : 'Create an account to start your AI learning journey.'}
           </p>
         </div>
 

@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { QuizQuestion } from '../types';
-import { CheckCircle, XCircle, ArrowRight, RefreshCw, Award, Facebook, Instagram, Mail, Send, MessageCircle, Link, Copy } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, RefreshCw, Facebook, Instagram, Mail, Send, MessageCircle, Link } from 'lucide-react';
+import { SJTUTOR_AVATAR } from '../App';
 
 interface QuizViewProps {
   questions: QuizQuestion[];
@@ -60,7 +60,7 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
   const handleShare = (platform: string) => {
     // Current URL (App Link) - Since it's a SPA, we share the main link or specific if configured
     const appUrl = window.location.origin; 
-    const text = `I scored ${score}/${questions.length} on my StudyVerse Quiz! 🎓`;
+    const text = `I scored ${score}/${questions.length} on my SJTutor Quiz! 🎓`;
     const shareTextWithLink = `${text}\nCheck it out here: ${appUrl}`;
     
     let shareUrl = '';
@@ -75,10 +75,10 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
           shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(text)}`;
           break;
       case 'gmail':
-           shareUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("My StudyVerse Score")}&body=${encodeURIComponent(shareTextWithLink)}`;
+           shareUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("My SJTutor Score")}&body=${encodeURIComponent(shareTextWithLink)}`;
            break;
       case 'email':
-        shareUrl = `mailto:?subject=My StudyVerse Score&body=${encodeURIComponent(shareTextWithLink)}`;
+        shareUrl = `mailto:?subject=My SJTutor Score&body=${encodeURIComponent(shareTextWithLink)}`;
         break;
       case 'instagram':
           navigator.clipboard.writeText(shareTextWithLink);
@@ -103,13 +103,13 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-xl shadow-md border border-slate-200 p-8 text-center animate-in fade-in zoom-in duration-300">
-          <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Award className="w-10 h-10 text-primary-600" />
+          <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg overflow-hidden">
+             <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
           </div>
           <h2 className="text-2xl font-bold text-slate-800 mb-2">
-            Past Result
+            Result Time!
           </h2>
-          <p className="text-slate-500 mb-8">{message}</p>
+          <p className="text-slate-500 mb-8 font-medium">{message}</p>
           
           <div className="text-5xl font-bold text-slate-900 mb-2 tracking-tight">{score} <span className="text-3xl text-slate-300 font-normal">/ {questions.length}</span></div>
           <p className="text-sm text-slate-400 uppercase tracking-wide font-medium mb-8">Score Achieved</p>

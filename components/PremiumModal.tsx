@@ -1,8 +1,7 @@
-
-
 import React, { useState, useRef } from 'react';
 import { X, Check, Crown, Zap, Shield, Smartphone, Upload, Loader2, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
+import { SJTUTOR_AVATAR } from '../App';
 
 interface PremiumModalProps {
   onClose: () => void;
@@ -168,8 +167,8 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onPaymentSuccess }
           
           {step === 'PLANS' && (
              <div className="space-y-6 w-full animate-in fade-in slide-in-from-right-4">
-                <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto text-primary-600">
-                  <Crown className="w-8 h-8" />
+                <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto text-primary-600 border-4 border-white shadow-lg overflow-hidden">
+                   <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
                 </div>
                 <div>
                    <h3 className="text-2xl font-bold text-slate-800">Selected: {currentPlan.name}</h3>
