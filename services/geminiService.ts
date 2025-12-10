@@ -1,8 +1,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { StudyRequestData, QuizQuestion, TimetableEntry } from "../types";
 
-// Initialize the client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize the client securely
+// If API key is missing (e.g. during build or misconfiguration), default to empty string to prevent crash on load.
+// API calls will fail gracefully with auth errors instead of White Screen of Death.
+const apiKey = process.env.API_KEY || "";
+const ai = new GoogleGenAI({ apiKey });
 
 export const GeminiService = {
   /**
