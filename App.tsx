@@ -619,13 +619,15 @@ const App: React.FC = () => {
       return <LoadingState mode={mode} />;
     }
 
-    const showEmptyState = !loading && 
-      ((mode === AppMode.SUMMARY && !summaryContent) ||
-       (mode === AppMode.ESSAY && !essayContent) ||
-       (mode === AppMode.QUIZ && !quizData));
+    // Check if we have generated content
+    const hasResult = (mode === AppMode.SUMMARY && summaryContent) ||
+                      (mode === AppMode.ESSAY && essayContent) ||
+                      (mode === AppMode.QUIZ && quizData);
 
-    // Hide input form if viewing a completed quiz from history to focus on results
-    const showInputForm = !(mode === AppMode.QUIZ && existingQuizScore !== undefined);
+    const showEmptyState = !loading && !hasResult;
+
+    // Hide input form if we have a result (to display it cleanly) or if viewing a history quiz
+    const showInputForm = !hasResult && !(mode === AppMode.QUIZ && existingQuizScore !== undefined);
 
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
@@ -668,11 +670,21 @@ const App: React.FC = () => {
         )}
 
         {mode === AppMode.SUMMARY && summaryContent && (
-          <ResultsView content={summaryContent} isLoading={loading} title={formData.chapterName} />
+          <ResultsView 
+            content={summaryContent} 
+            isLoading={loading} 
+            title={formData.chapterName}
+            onBack={() => setSummaryContent('')}
+          />
         )}
         
         {mode === AppMode.ESSAY && essayContent && (
-          <ResultsView content={essayContent} isLoading={loading} title={formData.chapterName} />
+          <ResultsView 
+            content={essayContent} 
+            isLoading={loading} 
+            title={formData.chapterName} 
+            onBack={() => setEssayContent('')}
+          />
         )}
 
         {mode === AppMode.QUIZ && quizData && (

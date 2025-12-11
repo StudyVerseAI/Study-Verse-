@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Loader2, Volume2, Square } from 'lucide-react';
+import { Loader2, Volume2, Square, ArrowLeft } from 'lucide-react';
 
 interface ResultsViewProps {
   content: string;
   isLoading: boolean;
   title: string;
+  onBack: () => void;
 }
 
-const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title }) => {
+const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title, onBack }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
@@ -54,10 +55,20 @@ const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title }) 
   if (!content && !isLoading) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
-      <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+    <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <h3 className="font-semibold text-slate-800">{title}</h3>
+          <button 
+            onClick={onBack}
+            className="p-2 -ml-2 text-slate-400 hover:text-primary-600 hover:bg-slate-100 rounded-lg transition-colors"
+            title="Create New"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h3 className="font-semibold text-slate-800 line-clamp-1">{title}</h3>
+        </div>
+        
+        <div className="flex items-center gap-2">
           {!isLoading && content && (
             <button
               onClick={toggleSpeech}
@@ -71,17 +82,18 @@ const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title }) 
               {isPlaying ? (
                 <>
                   <Square className="w-3.5 h-3.5 fill-current" />
-                  <span>Stop</span>
+                  <span className="hidden sm:inline">Stop</span>
                 </>
               ) : (
                 <>
                   <Volume2 className="w-4 h-4" />
-                  <span>Listen</span>
+                  <span className="hidden sm:inline">Listen</span>
                 </>
               )}
             </button>
           )}
         </div>
+
         {isLoading && (
           <div className="flex items-center text-primary-600 text-sm">
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -100,6 +112,17 @@ const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title }) 
           </div>
         )}
       </div>
+      
+      {!isLoading && (
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-center">
+            <button 
+                onClick={onBack}
+                className="text-sm font-semibold text-primary-700 hover:text-primary-800 hover:underline"
+            >
+                Generate Another Version
+            </button>
+        </div>
+      )}
     </div>
   );
 };
