@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from '../types';
 import { GeminiService } from '../services/geminiService';
-import { Send, User as UserIcon, Loader2, Mic, MicOff } from 'lucide-react';
+import { Send, User as UserIcon, Loader2, Mic, MicOff, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Chat, GenerateContentResponse } from "@google/genai";
 import { SJTUTOR_AVATAR } from '../App';
+
+const SAMPLE_QUESTIONS = [
+  "Explain Quantum Physics simply.",
+  "How do I solve quadratic equations?",
+  "Summarize the French Revolution.",
+  "Write a haiku about studying."
+];
 
 const TutorChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -52,17 +59,16 @@ const TutorChat: React.FC = () => {
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || !chatSessionRef.current) return;
+  const sendMessageToAi = async (textToSend: string) => {
+    if (!textToSend.trim() || !chatSessionRef.current) return;
 
     const userMsg: ChatMessage = {
       role: 'user',
-      text: input,
+      text: textToSend,
       timestamp: Date.now()
     };
 
     setMessages(prev => [...prev, userMsg]);
-    setInput('');
     setIsTyping(true);
 
     try {
@@ -86,10 +92,15 @@ const TutorChat: React.FC = () => {
       }
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: "I'm sorry, I encountered an error. Please try asking again.", timestamp: Date.now() }]);
+      setMessages(prev => [...prev, { role: 'model', text: "I'm sorry, I encountered an error. Please try asking again or check your connection.", timestamp: Date.now() }]);
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleSend = () => {
+    sendMessageToAi(input);
+    setInput('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -146,6 +157,22 @@ const TutorChat: React.FC = () => {
               </div>
            </div>
         )}
+        
+        {messages.length === 1 && !isTyping && (
+          <div className="flex flex-wrap gap-2 mt-4 ml-14">
+            {SAMPLE_QUESTIONS.map((q, idx) => (
+              <button
+                key={idx}
+                onClick={() => sendMessageToAi(q)}
+                className="text-xs bg-primary-50 text-primary-700 px-3 py-1.5 rounded-full border border-primary-100 hover:bg-primary-100 transition-colors flex items-center gap-1"
+              >
+                <Sparkles className="w-3 h-3" />
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 

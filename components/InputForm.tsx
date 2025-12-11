@@ -1,16 +1,16 @@
-
 import React from 'react';
 import { StudyRequestData, AppMode, DifficultyLevel } from '../types';
-import { BookOpen, GraduationCap, School, User, Languages, BookType, HelpCircle, BarChart } from 'lucide-react';
+import { BookOpen, GraduationCap, School, User, Languages, BookType, HelpCircle, BarChart, Sparkles } from 'lucide-react';
 
 interface InputFormProps {
   data: StudyRequestData;
   mode: AppMode;
   onChange: (field: keyof StudyRequestData, value: string | number) => void;
+  onFillSample?: () => void;
   disabled?: boolean;
 }
 
-const InputForm: React.FC<InputFormProps> = ({ data, mode, onChange, disabled }) => {
+const InputForm: React.FC<InputFormProps> = ({ data, mode, onChange, onFillSample, disabled }) => {
 
   const renderInput = (
     label: string, 
@@ -35,13 +35,30 @@ const InputForm: React.FC<InputFormProps> = ({ data, mode, onChange, disabled })
   );
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-      <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-        <BookOpen className="w-5 h-5 text-primary-600" />
-        Study Details
-      </h2>
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+      <div className="flex justify-between items-center mb-6 relative z-10">
+        <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-primary-600" />
+          Study Details
+        </h2>
+        
+        {onFillSample && (
+          <button
+            onClick={onFillSample}
+            disabled={disabled}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-100 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+            title="Fill with sample data"
+          >
+            <Sparkles className="w-3.5 h-3.5 fill-primary-400 text-primary-600" />
+            Try Example
+          </button>
+        )}
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 relative z-10">
         {renderInput("Subject", "subject", BookType, "e.g. History")}
         {renderInput("Class / Grade", "gradeClass", GraduationCap, "e.g. 10th Grade")}
         {renderInput("Board", "board", School, "e.g. CBSE")}

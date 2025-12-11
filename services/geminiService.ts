@@ -1,15 +1,21 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { StudyRequestData, QuizQuestion, TimetableEntry } from "../types";
 
-// Initialize the client securely
-// The API key is injected via vite.config.ts from the environment variables.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to get the AI client lazily.
+// This prevents the "API Key must be set" error from crashing the app immediately on load.
+// The key is checked when a request is actually made.
+const getAiClient = () => {
+  const apiKey = process.env.API_KEY || "";
+  // We initialize here so we can catch errors during request time if key is missing
+  return new GoogleGenAI({ apiKey });
+};
 
 export const GeminiService = {
   /**
    * Generates a summary for a specific chapter.
    */
   generateSummaryStream: async (data: StudyRequestData) => {
+    const ai = getAiClient();
     const prompt = `
       Create a comprehensive, structured summary for the following study material.
       Use clear headings, bullet points for key concepts, and a bold conclusion.
@@ -37,6 +43,7 @@ export const GeminiService = {
    * Generates an essay based on the chapter.
    */
   generateEssayStream: async (data: StudyRequestData) => {
+    const ai = getAiClient();
     const prompt = `
       Write a detailed, academic essay based on the topics covered in this chapter.
       The essay should have a proper introduction, body paragraphs analyzing key themes, and a conclusion.
@@ -65,6 +72,7 @@ export const GeminiService = {
    * Generates a quiz in JSON format.
    */
   generateQuiz: async (data: StudyRequestData): Promise<QuizQuestion[]> => {
+    const ai = getAiClient();
     const count = data.questionCount || 5;
     const difficulty = data.difficulty || 'Medium';
 
@@ -123,6 +131,7 @@ export const GeminiService = {
    * Generates a study timetable.
    */
   generateStudyTimetable: async (examDate: string, subjects: string, hoursPerDay: number): Promise<TimetableEntry[]> => {
+    const ai = getAiClient();
     const today = new Date().toDateString();
     const prompt = `
       Current Date: ${today}.
@@ -183,6 +192,7 @@ export const GeminiService = {
    * Updates an existing study timetable based on user instructions.
    */
   updateStudyTimetable: async (currentTimetable: TimetableEntry[], instruction: string): Promise<TimetableEntry[]> => {
+    const ai = getAiClient();
     const prompt = `
       You are an intelligent study planner.
       
@@ -245,6 +255,7 @@ export const GeminiService = {
    * Creates a chat session for the AI Tutor.
    */
   createTutorChat: () => {
+    const ai = getAiClient();
     return ai.chats.create({
       model: 'gemini-2.5-flash',
       config: {
@@ -257,6 +268,7 @@ export const GeminiService = {
    * Analyzes a payment screenshot to verify the transaction.
    */
   validatePaymentScreenshot: async (imageBase64: string, planName: string, price: number) => {
+    const ai = getAiClient();
     const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
     
     // Strict Verification Prompt

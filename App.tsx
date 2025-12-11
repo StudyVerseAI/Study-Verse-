@@ -36,6 +36,17 @@ import { GenerateContentResponse } from '@google/genai';
 // SJTutor Avatar Constant
 export const SJTUTOR_AVATAR = "https://res.cloudinary.com/dbliqm48v/image/upload/v1765344874/gemini-2.5-flash-image_remove_all_the_elemts_around_the_tutor-0_lvlyl0.jpg";
 
+const SAMPLE_DATA: StudyRequestData = {
+  subject: 'Physics',
+  gradeClass: 'Grade 10',
+  board: 'CBSE',
+  language: 'English',
+  chapterName: "Newton's Laws of Motion",
+  author: 'HC Verma',
+  questionCount: 5,
+  difficulty: 'Medium'
+};
+
 const App: React.FC = () => {
   // Auth State
   const [user, setUser] = useState<User | null>(null);
@@ -189,6 +200,10 @@ const App: React.FC = () => {
 
   const handleFormChange = (field: keyof StudyRequestData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFillSample = () => {
+    setFormData(SAMPLE_DATA);
   };
 
   const validateForm = () => {
@@ -617,7 +632,8 @@ const App: React.FC = () => {
             <InputForm 
               data={formData} 
               mode={mode}
-              onChange={handleFormChange} 
+              onChange={handleFormChange}
+              onFillSample={handleFillSample}
               disabled={loading}
             />
         )}
