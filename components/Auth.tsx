@@ -93,10 +93,10 @@ const Auth: React.FC<AuthProps> = ({ onSignUpSuccess, onClose }) => {
 
         <div className="mb-6 text-center">
           <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center shadow-xl shadow-primary-500/20 mx-auto mb-4 overflow-hidden border-4 border-white">
-            <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
+            <img src={SJTUTOR_AVATAR} alt="SJ Tutor AI" className="w-full h-full object-cover" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-800">
-            {isLogin ? 'Welcome Back!' : 'Join SJTutor'}
+            {isLogin ? 'Welcome Back!' : 'Join SJ Tutor AI'}
           </h2>
           <p className="text-slate-500 mt-2 text-sm">
             {isLogin ? 'Sign in to sync your progress.' : 'Create an account to start your AI learning journey.'}
@@ -181,7 +181,7 @@ const Auth: React.FC<AuthProps> = ({ onSignUpSuccess, onClose }) => {
 
         <div className="mt-6 text-center">
           <p className="text-xs text-slate-400">
-            By continuing, you agree to StudyVerse's Terms of Service.
+            By continuing, you agree to SJ Tutor AI's Terms of Service.
           </p>
         </div>
       </div>

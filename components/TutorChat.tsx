@@ -10,7 +10,7 @@ const TutorChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'model',
-      text: "Hi there! I'm SJTutor. I can help you understand complex topics, solve problems, or just clarify your doubts. What are we studying today?",
+      text: "Hi there! I'm SJ Tutor AI. I can help you understand complex topics, solve problems, or just clarify your doubts. What are we studying today?",
       timestamp: Date.now()
     }
   ]);
@@ -162,7 +162,7 @@ const TutorChat: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isListening ? "Listening..." : "Ask SJTutor anything..."}
+            placeholder={isListening ? "Listening..." : "Ask SJ Tutor AI anything..."}
             className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none text-sm max-h-32 text-slate-900"
             rows={1}
           />

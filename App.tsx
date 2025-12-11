@@ -395,7 +395,7 @@ const App: React.FC = () => {
           {filteredHistory.length === 0 ? (
             <div className="text-center py-24 bg-white/60 backdrop-blur-md rounded-2xl border border-slate-200/60 border-dashed animate-in zoom-in duration-500">
               <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-100 p-1">
-                 <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full rounded-full object-cover" />
+                 <img src={SJTUTOR_AVATAR} alt="SJ Tutor AI" className="w-full h-full rounded-full object-cover" />
               </div>
               <p className="text-slate-500 font-medium mb-6">No {categoryLabel.toLowerCase()} found yet.</p>
 
@@ -474,7 +474,7 @@ const App: React.FC = () => {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                 <div className="flex-1">
                   <h3 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">
-                    Hey, I'm <span className="text-primary-600">SJTutor</span>!
+                    Hey, I'm <span className="text-primary-600">SJ Tutor AI</span>!
                   </h3>
                   <h4 className="text-xl font-medium text-slate-600 mb-4">
                     Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">{user ? (userProfile.displayName || 'Scholar') : 'Guest'}</span>
@@ -520,7 +520,7 @@ const App: React.FC = () => {
                      <div className="absolute inset-0 bg-primary-200 rounded-full blur-2xl opacity-50"></div>
                      <img 
                         src={SJTUTOR_AVATAR} 
-                        alt="SJTutor Mascot" 
+                        alt="SJ Tutor AI Mascot" 
                         className="relative w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
                      />
                 </div>
@@ -632,7 +632,7 @@ const App: React.FC = () => {
         {showEmptyState && (
           <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
              <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg overflow-hidden">
-                <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
+                <img src={SJTUTOR_AVATAR} alt="SJ Tutor AI" className="w-full h-full object-cover" />
              </div>
              <h3 className="text-lg font-semibold text-slate-800 mb-2">Ready to Start?</h3>
              <p className="text-slate-500 mb-8 max-w-md mx-auto">
@@ -699,10 +699,10 @@ const App: React.FC = () => {
           <div className="p-6 border-b border-slate-100">
              <div className="flex items-center gap-3">
                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-500 shadow-md flex-shrink-0">
-                 <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
+                 <img src={SJTUTOR_AVATAR} alt="SJ Tutor AI" className="w-full h-full object-cover" />
                </div>
                <div>
-                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">SJTutor</h1>
+                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">SJ Tutor AI</h1>
                  <p className="text-xs text-slate-500 font-medium">Your AI Study Buddy</p>
                </div>
              </div>
@@ -811,8 +811,8 @@ const App: React.FC = () => {
              </button>
              <h2 className="text-lg font-bold text-slate-800">
                {/* Show Study Verse AI on Mobile or when Dashboard is active, otherwise show nav label */}
-               {mode === AppMode.DASHBOARD ? 'SJTutor' : 
-                (navItems.find(n => n.id === mode)?.label || 'Study Verse AI')}
+               {mode === AppMode.DASHBOARD ? 'SJ Tutor AI' : 
+                (navItems.find(n => n.id === mode)?.label || 'SJ Tutor AI')}
              </h2>
           </div>
           

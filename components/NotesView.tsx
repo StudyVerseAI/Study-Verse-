@@ -328,9 +328,9 @@ const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
               <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
                 <div className="text-center mb-8">
                   <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-lg overflow-hidden">
-                     <img src={SJTUTOR_AVATAR} alt="SJTutor" className="w-full h-full object-cover" />
+                     <img src={SJTUTOR_AVATAR} alt="SJ Tutor AI" className="w-full h-full object-cover" />
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-800">SJTutor's Planner</h2>
+                  <h2 className="text-2xl font-bold text-slate-800">SJ Tutor AI's Planner</h2>
                   <p className="text-slate-500">I can generate a personalized timetable for your upcoming exams.</p>
                 </div>
 
@@ -380,7 +380,7 @@ const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
                      <img src={SJTUTOR_AVATAR} alt="Thinking..." className="w-full h-full object-cover" />
                   </div>
                   <p className="font-medium">
-                    {showEditTimetable ? 'SJTutor is Optimizing...' : 'SJTutor is Planning...'}
+                    {showEditTimetable ? 'SJ Tutor AI is Optimizing...' : 'SJ Tutor AI is Planning...'}
                   </p>
                   <p className="text-sm">Creating an optimized schedule for you.</p>
                </div>

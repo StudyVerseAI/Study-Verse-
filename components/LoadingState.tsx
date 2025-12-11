@@ -75,8 +75,8 @@ const LoadingState: React.FC<LoadingStateProps> = ({ mode }) => {
       </div>
 
       <h3 className="text-xl font-bold text-slate-800 mb-2 animate-pulse">
-        {mode === AppMode.NOTES ? 'SJTutor is Planning' : 
-         `SJTutor is Creating your ${mode === AppMode.SUMMARY ? 'Summary' : mode === AppMode.QUIZ ? 'Quiz' : 'Essay'}`
+        {mode === AppMode.NOTES ? 'SJ Tutor AI is Planning' : 
+         `SJ Tutor AI is Creating your ${mode === AppMode.SUMMARY ? 'Summary' : mode === AppMode.QUIZ ? 'Quiz' : 'Essay'}`
         }
       </h3>
       
