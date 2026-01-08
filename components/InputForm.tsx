@@ -1,6 +1,6 @@
 import React from 'react';
 import { StudyRequestData, AppMode, DifficultyLevel } from '../types';
-import { BookOpen, GraduationCap, School, User, Languages, BookType, HelpCircle, BarChart, Sparkles } from 'lucide-react';
+import { BookOpen, GraduationCap, School, User, Languages, BookType, HelpCircle, BarChart, Sparkles, Zap } from 'lucide-react';
 
 interface InputFormProps {
   data: StudyRequestData;
@@ -11,6 +11,20 @@ interface InputFormProps {
 }
 
 const InputForm: React.FC<InputFormProps> = ({ data, mode, onChange, onFillSample, disabled }) => {
+
+  const getEstimatedCost = () => {
+    if (mode === AppMode.SUMMARY || mode === AppMode.ESSAY) return 10;
+    if (mode === AppMode.QUIZ) {
+      let cost = 10;
+      const qCount = data.questionCount || 5;
+      cost += Math.ceil(qCount / 2);
+      if (data.difficulty === 'Hard') cost += 5;
+      return cost;
+    }
+    return 0;
+  };
+
+  const cost = getEstimatedCost();
 
   const renderInput = (
     label: string, 
@@ -44,18 +58,25 @@ const InputForm: React.FC<InputFormProps> = ({ data, mode, onChange, onFillSampl
           <BookOpen className="w-5 h-5 text-primary-600" />
           Study Details
         </h2>
-        
-        {onFillSample && (
-          <button
-            onClick={onFillSample}
-            disabled={disabled}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-100 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-            title="Fill with sample data"
-          >
-            <Sparkles className="w-3.5 h-3.5 fill-primary-400 text-primary-600" />
-            Try Example
-          </button>
-        )}
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-full border border-amber-100 text-xs font-semibold">
+            <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
+            Est. Cost: {cost} Credits
+          </div>
+          
+          {onFillSample && (
+            <button
+              onClick={onFillSample}
+              disabled={disabled}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-100 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              title="Fill with sample data"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-primary-400 text-primary-600" />
+              Try Example
+            </button>
+          )}
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 relative z-10">
@@ -101,7 +122,7 @@ const InputForm: React.FC<InputFormProps> = ({ data, mode, onChange, onFillSampl
                 >
                   <option value="Easy">Easy</option>
                   <option value="Medium">Medium</option>
-                  <option value="Hard">Hard</option>
+                  <option value="Hard">Hard (+5 Credits)</option>
                 </select>
               </div>
             </div>

@@ -6,7 +6,7 @@ import { SJTUTOR_AVATAR } from '../App';
 
 interface NotesViewProps {
   userId: string | null; // Use for local storage keys
-  onDeductCredit: () => boolean;
+  onDeductCredit: (amount: number) => boolean;
 }
 
 const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
@@ -111,8 +111,9 @@ const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
   const handleGenerateTimetable = async () => {
     if (!examDate || !examSubjects) return;
     
-    if (!onDeductCredit()) {
-        alert("Insufficient credits to generate timetable.");
+    const cost = 10;
+    if (!onDeductCredit(cost)) {
+        alert(`Insufficient credits. Timetable generation costs ${cost} credits.`);
         return;
     }
 
@@ -135,8 +136,9 @@ const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
   const handleUpdateTimetable = async () => {
     if (!editInstruction.trim()) return;
 
-    if (!onDeductCredit()) {
-        alert("Insufficient credits to update timetable.");
+    const cost = 10;
+    if (!onDeductCredit(cost)) {
+        alert(`Insufficient credits. Updating timetable costs ${cost} credits.`);
         return;
     }
 
@@ -371,7 +373,7 @@ const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
                     <Sparkles className="w-5 h-5" />
                     Generate Timetable
                   </button>
-                  <p className="text-xs text-center text-slate-400">Costs 1 Generation Credit</p>
+                  <p className="text-xs text-center text-slate-400">Costs 10 Generation Credits</p>
                 </div>
               </div>
             ) : isGenerating ? (
@@ -442,7 +444,7 @@ const NotesView: React.FC<NotesViewProps> = ({ userId, onDeductCredit }) => {
                            disabled={!editInstruction.trim()}
                            className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50"
                         >
-                           Update Schedule
+                           Update Schedule (10 Credits)
                         </button>
                      </div>
                   </div>

@@ -57,9 +57,9 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
     }
   };
 
-  const handleShare = (platform: string) => {
-    // Current URL (App Link) - Since it's a SPA, we share the main link or specific if configured
-    const appUrl = window.location.origin; 
+  const handleShare = async (platform: string) => {
+    // Use window.location.href to ensure full URL is captured (better for deep links/different environments)
+    const appUrl = window.location.href; 
     const text = `I scored ${score}/${questions.length} on my SJ Tutor AI Quiz! 🎓`;
     const shareTextWithLink = `${text}\nCheck it out here: ${appUrl}`;
     
@@ -75,7 +75,8 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
           shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(text)}`;
           break;
       case 'gmail':
-           shareUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("My SJ Tutor AI Score")}&body=${encodeURIComponent(shareTextWithLink)}`;
+           // Use /u/0/ to target default logged-in account and avoid potential redirect loops/404s
+           shareUrl = `https://mail.google.com/mail/u/0/?view=cm&fs=1&su=${encodeURIComponent("My SJ Tutor AI Score")}&body=${encodeURIComponent(shareTextWithLink)}`;
            break;
       case 'email':
         shareUrl = `mailto:?subject=My SJ Tutor AI Score&body=${encodeURIComponent(shareTextWithLink)}`;
@@ -86,6 +87,21 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
           shareUrl = 'https://instagram.com';
           break;
       case 'copy':
+          // Try Native Share API first (Mobile friendly)
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: 'My SJ Tutor AI Score',
+                text: text,
+                url: appUrl,
+              });
+              return; // Success
+            } catch (err) {
+              // Fallback if user cancels or error
+              console.log("Share failed, falling back to clipboard");
+            }
+          }
+          // Clipboard Fallback
           navigator.clipboard.writeText(shareTextWithLink);
           alert("Score and link copied to clipboard!");
           return;
@@ -143,7 +159,7 @@ const QuizView: React.FC<QuizViewProps> = ({ questions, onReset, onComplete, exi
                 <button onClick={() => handleShare('email')} className="p-3 bg-slate-500 text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Email">
                     <Mail className="w-5 h-5" />
                 </button>
-                <button onClick={() => handleShare('copy')} className="p-3 bg-slate-800 text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Copy Link">
+                <button onClick={() => handleShare('copy')} className="p-3 bg-slate-800 text-white rounded-full hover:scale-110 transition-transform shadow-sm hover:shadow-md" title="Copy Link / Share">
                     <Link className="w-5 h-5" />
                 </button>
             </div>

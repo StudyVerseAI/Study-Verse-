@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { User, Phone, School, FileText, Camera, Save, X, Edit2, ArrowRight, Mail, BookOpen, Layers, Briefcase, Zap } from 'lucide-react';
@@ -7,7 +5,7 @@ import { User, Phone, School, FileText, Camera, Save, X, Edit2, ArrowRight, Mail
 interface ProfileViewProps {
   profile: UserProfile;
   email: string | null;
-  onSave: (profile: UserProfile) => void;
+  onSave: (profile: UserProfile, redirect?: boolean) => void;
   isOnboarding?: boolean;
 }
 
@@ -40,7 +38,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, email, onSave, isOnb
   };
 
   const handleSave = () => {
-    onSave(formData);
+    onSave(formData, true);
     if (!isOnboarding) {
       setIsEditing(false);
     }

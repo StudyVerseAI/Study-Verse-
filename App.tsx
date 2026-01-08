@@ -29,7 +29,8 @@ import {
   Zap,
   Crown,
   Plus,
-  Clock
+  Clock,
+  Key
 } from 'lucide-react';
 import { GenerateContentResponse } from '@google/genai';
 
@@ -37,12 +38,12 @@ import { GenerateContentResponse } from '@google/genai';
 export const SJTUTOR_AVATAR = "https://res.cloudinary.com/dbliqm48v/image/upload/v1765344874/gemini-2.5-flash-image_remove_all_the_elemts_around_the_tutor-0_lvlyl0.jpg";
 
 const SAMPLE_DATA: StudyRequestData = {
-  subject: 'Physics',
-  gradeClass: 'Grade 10',
+  subject: 'Science',
+  gradeClass: 'Class 8',
   board: 'CBSE',
   language: 'English',
-  chapterName: "Newton's Laws of Motion",
-  author: 'HC Verma',
+  chapterName: "Synthetic Fibres",
+  author: '',
   questionCount: 5,
   difficulty: 'Medium'
 };
@@ -54,6 +55,7 @@ const App: React.FC = () => {
   const [isNewUser, setIsNewUser] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [apiKeyMissing, setApiKeyMissing] = useState(false);
 
   // App State
   const [mode, setMode] = useState<AppMode>(AppMode.DASHBOARD);
@@ -89,19 +91,44 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Auth Listener
+  // Check API Key immediately
   useEffect(() => {
+    if (!process.env.API_KEY) {
+      console.warn("API Key is missing in environment variables!");
+      setApiKeyMissing(true);
+    }
+  }, []);
+
+  // Auth Listener with Safety Timeout
+  useEffect(() => {
+    // Safety timeout: If Firebase is blocked or slow, stop loading after 4 seconds
+    const timeoutId = setTimeout(() => {
+      if (authLoading) {
+        console.warn("Auth check timed out, defaulting to guest.");
+        setAuthLoading(false);
+      }
+    }, 4000);
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
+      clearTimeout(timeoutId); // Clear timeout on success
       
       if (!currentUser) {
         setIsNewUser(false);
         setUserProfile(initialProfileState);
         setMode(AppMode.DASHBOARD); // Reset to dashboard if logged out
       }
+    }, (err) => {
+      console.error("Auth Error:", err);
+      setAuthLoading(false); // Stop loading on error
+      clearTimeout(timeoutId);
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Profile Persistence Listener
@@ -166,7 +193,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleProfileSave = (newProfile: UserProfile) => {
+  const handleProfileSave = (newProfile: UserProfile, redirectDashboard = false) => {
     setUserProfile(newProfile);
     if (user) {
       localStorage.setItem(`profile_${user.uid}`, JSON.stringify(newProfile));
@@ -174,7 +201,9 @@ const App: React.FC = () => {
     if (isNewUser) {
       setIsNewUser(false);
       setShowAuthModal(false);
-      setMode(AppMode.DASHBOARD);
+      if (redirectDashboard) {
+        setMode(AppMode.DASHBOARD);
+      }
     }
   };
 
@@ -238,10 +267,26 @@ const App: React.FC = () => {
     }
   };
 
-  const deductCredit = () => {
-    if (userProfile.credits > 0) {
-      const updatedProfile = { ...userProfile, credits: userProfile.credits - 1 };
-      handleProfileSave(updatedProfile);
+  const calculateCost = (targetMode: AppMode, data: StudyRequestData): number => {
+    if (targetMode === AppMode.SUMMARY) return 10;
+    if (targetMode === AppMode.ESSAY) return 10;
+    if (targetMode === AppMode.QUIZ) {
+      let cost = 10; // Base cost
+      const qCount = data.questionCount || 5;
+      // 2 questions = 1 credit
+      cost += Math.ceil(qCount / 2); 
+      // Difficulty increase (Hard) = 5 credits
+      if (data.difficulty === 'Hard') cost += 5; 
+      return cost;
+    }
+    return 0;
+  };
+
+  const deductCredit = (amount: number) => {
+    if (userProfile.credits >= amount) {
+      const updatedProfile = { ...userProfile, credits: userProfile.credits - amount };
+      // Pass false to prevent redirect
+      handleProfileSave(updatedProfile, false);
       return true;
     }
     return false;
@@ -253,8 +298,15 @@ const App: React.FC = () => {
       return;
     }
 
-    if (userProfile.credits <= 0) {
-      setError("You have used all your free generations (100/100). Upgrade to Premium for more.");
+    const cost = calculateCost(mode, formData);
+    if (userProfile.credits < cost) {
+      setError(`Insufficient credits. This generation requires ${cost} credits, but you have ${userProfile.credits}. Upgrade to Premium for more.`);
+      return;
+    }
+    
+    // Check API Key before attempting generation
+    if (!process.env.API_KEY) {
+      setError("Configuration Error: API Key is missing. Please check your environment variables.");
       return;
     }
 
@@ -279,7 +331,7 @@ const App: React.FC = () => {
             }
         }
         addToHistory(AppMode.SUMMARY, text);
-        deductCredit();
+        deductCredit(cost);
 
       } else if (mode === AppMode.ESSAY) {
         setEssayContent('');
@@ -294,18 +346,26 @@ const App: React.FC = () => {
             }
         }
         addToHistory(AppMode.ESSAY, text);
-        deductCredit();
+        deductCredit(cost);
 
       } else if (mode === AppMode.QUIZ) {
         setQuizData(null);
         const questions = await GeminiService.generateQuiz(formData);
         setQuizData(questions);
         addToHistory(AppMode.QUIZ, questions);
-        deductCredit();
+        deductCredit(cost);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to generate content. Please check your inputs and try again.");
+      
+      let errorMessage = err.message || "Failed to generate content. Please check your inputs and try again.";
+      
+      // Handle the specific API Not Enabled error
+      if (errorMessage.includes("Generative Language API has not been used") || errorMessage.includes("PERMISSION_DENIED")) {
+        errorMessage = "API Configuration Error: The Google Generative AI API is not enabled for your project. Please enable it in the Google Cloud Console.";
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -483,6 +543,22 @@ const App: React.FC = () => {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-primary-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
 
         <div className="relative z-10 space-y-8">
+          {/* API Key Warning */}
+          {apiKeyMissing && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-4 animate-in fade-in slide-in-from-top-4 shadow-sm">
+              <div className="bg-red-100 p-2 rounded-full">
+                <Key className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h4 className="font-bold text-red-800">API Key Missing</h4>
+                <p className="text-sm text-red-600 mt-1">
+                  The AI features will not work because the <code>API_KEY</code> environment variable is missing. 
+                  Please check your project settings or <code>.env</code> file.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Welcome Card with Avatar */}
           <div className="animate-fade-in-up bg-white/70 backdrop-blur-xl border border-white/50 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500">
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-100/40 to-transparent rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
@@ -659,6 +735,7 @@ const App: React.FC = () => {
              </p>
              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                <button 
+                type="button"
                 onClick={handleGenerate}
                 className="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-primary-500/25 flex items-center gap-2"
                >

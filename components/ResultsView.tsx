@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Loader2, Volume2, Square, ArrowLeft } from 'lucide-react';
+import { Loader2, Volume2, Square, ArrowLeft, Download, FileText, Image as ImageIcon, FileType } from 'lucide-react';
+// @ts-ignore
+import html2canvas from 'html2canvas';
+// @ts-ignore
+import { jsPDF } from 'jspdf';
 
 interface ResultsViewProps {
   content: string;
@@ -11,6 +15,8 @@ interface ResultsViewProps {
 
 const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title, onBack }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Cleanup speech when component unmounts
@@ -52,6 +58,137 @@ const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title, on
     }
   };
 
+  const downloadText = () => {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_summary.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadWord = () => {
+    if (!contentRef.current) return;
+    
+    // A simple hack to create a file that Word can open (HTML)
+    const htmlContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'><title>${title}</title></head>
+      <body>${contentRef.current.innerHTML}</body>
+      </html>
+    `;
+    
+    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadImage = async () => {
+    if (!contentRef.current) return;
+    setIsDownloading(true);
+    try {
+      // Use clone technique for Image as well to ensure full height
+      const element = contentRef.current;
+      const clone = element.cloneNode(true) as HTMLElement;
+      
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.width = '800px'; // Fixed width for consistent output
+      clone.style.height = 'auto';
+      clone.style.overflow = 'visible';
+      clone.style.maxHeight = 'none';
+      clone.style.background = 'white';
+      
+      document.body.appendChild(clone);
+
+      const canvas = await html2canvas(clone, { scale: 2, useCORS: true });
+      document.body.removeChild(clone);
+
+      const image = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = image;
+      a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+      a.click();
+    } catch (e) {
+      console.error("Image download failed", e);
+      alert("Failed to generate image.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const downloadPDF = async () => {
+    if (!contentRef.current) return;
+    setIsDownloading(true);
+    try {
+      // CLONE TECHNIQUE:
+      // We clone the DOM element and append it to the body (hidden).
+      // This allows us to remove scrollbars and force the element to render at full height.
+      // This ensures html2canvas captures the entire content, not just the visible viewport.
+      const element = contentRef.current;
+      const clone = element.cloneNode(true) as HTMLElement;
+      
+      // Styling to ensure full capture
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.width = '750px'; // Fixed width to fit nicely on A4
+      clone.style.height = 'auto'; // Force full height
+      clone.style.overflow = 'visible';
+      clone.style.maxHeight = 'none';
+      clone.style.background = 'white';
+      clone.style.padding = '40px'; // Add padding for the PDF look
+      
+      document.body.appendChild(clone);
+
+      const canvas = await html2canvas(clone, { 
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+      
+      // Clean up the clone
+      document.body.removeChild(clone);
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = pdfWidth; 
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // Add subsequent pages if content is long
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(`${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+    } catch (e) {
+      console.error("PDF download failed", e);
+      alert("Failed to generate PDF. Try downloading as Text or Word.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   if (!content && !isLoading) return null;
 
   return (
@@ -70,27 +207,66 @@ const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title, on
         
         <div className="flex items-center gap-2">
           {!isLoading && content && (
-            <button
-              onClick={toggleSpeech}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                isPlaying 
-                  ? 'bg-red-50 text-red-600 hover:bg-red-100' 
-                  : 'bg-primary-50 text-primary-600 hover:bg-primary-100'
-              }`}
-              title={isPlaying ? "Stop reading" : "Read aloud"}
-            >
-              {isPlaying ? (
-                <>
-                  <Square className="w-3.5 h-3.5 fill-current" />
-                  <span className="hidden sm:inline">Stop</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Listen</span>
-                </>
-              )}
-            </button>
+            <>
+              {/* Download Options */}
+              <div className="flex items-center bg-white border border-slate-200 rounded-lg p-1 mr-2">
+                 <button 
+                   onClick={downloadPDF} 
+                   disabled={isDownloading}
+                   className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                   title="Download PDF"
+                 >
+                   <FileType className="w-4 h-4" />
+                 </button>
+                 <div className="w-px h-4 bg-slate-200 mx-1"></div>
+                 <button 
+                   onClick={downloadWord} 
+                   className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                   title="Download Word (Doc)"
+                 >
+                   <FileText className="w-4 h-4" />
+                 </button>
+                 <div className="w-px h-4 bg-slate-200 mx-1"></div>
+                 <button 
+                   onClick={downloadImage} 
+                   disabled={isDownloading}
+                   className="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors disabled:opacity-50"
+                   title="Download Image (PNG)"
+                 >
+                   <ImageIcon className="w-4 h-4" />
+                 </button>
+                 <div className="w-px h-4 bg-slate-200 mx-1"></div>
+                 <button 
+                   onClick={downloadText} 
+                   className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
+                   title="Download Text"
+                 >
+                   <Download className="w-4 h-4" />
+                 </button>
+              </div>
+
+              <button
+                onClick={toggleSpeech}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  isPlaying 
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                    : 'bg-primary-50 text-primary-600 hover:bg-primary-100'
+                }`}
+                title={isPlaying ? "Stop reading" : "Read aloud"}
+              >
+                {isPlaying ? (
+                  <>
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                    <span className="hidden sm:inline">Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Listen</span>
+                  </>
+                )}
+              </button>
+            </>
           )}
         </div>
 
@@ -101,8 +277,9 @@ const ResultsView: React.FC<ResultsViewProps> = ({ content, isLoading, title, on
           </div>
         )}
       </div>
-      <div className="p-6 min-h-[200px]">
-        <div className="markdown-body text-slate-700">
+      
+      <div className="p-6 min-h-[200px]" ref={contentRef}>
+        <div className="markdown-body text-slate-700 bg-white">
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
         {content === '' && isLoading && (
